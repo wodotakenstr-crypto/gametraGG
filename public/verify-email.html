@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verifica tu correo | GameTrade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="verify-email.css" />
+  </head>
+  <body><main><a class="brand" href="index.html"><span>G</span>GameTrade</a><section><p>VERIFICACIÓN DE CORREO</p><h1>Confirma tu cuenta</h1><div class="mail-icon">@</div><span id="emailText"></span><form id="verifyForm"><label>Código de 6 dígitos<input id="codeInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required /></label><button type="submit">Verificar correo</button></form><button class="resend" id="resendButton" type="button">Reenviar código</button><div id="status" aria-live="polite"></div></section></main><script src="verify-email.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Administración | GameTrade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="admin-users.css" />
+    <link rel="stylesheet" href="admin-finance.css" />
+    <link rel="stylesheet" href="back.css" />
+  </head>
+  <body>
+    <header><a class="brand" href="index.html"><span>G</span>GameTrade</a><div><button class="back-button" type="button" data-back>Volver</button><a href="index.html">Mercado</a></div></header>
+    <main><section class="admin-head"><p>ADMINISTRACIÓN</p><h1>Control del mercado</h1><span>Moderación, verificación manual de pagos y retiros.</span></section><section class="metrics" id="metrics"></section><section class="admin-section"><div class="section-title"><h2>Pagos PayPal Sandbox confirmados</h2><p>Registro automático de pruebas aprobadas por PayPal.</p></div><div id="paypalPayments" class="admin-list"></div></section><section class="admin-section"><div class="section-title"><h2>Pagos USDT pendientes</h2><p>Confirma solo después de revisar manualmente el hash en TRC20.</p></div><div id="payments" class="admin-list"></div></section><section class="admin-section"><div class="section-title"><h2>Retiros solicitados</h2><p>Al aprobar, envía el pago externamente mediante Binance. Es solo un registro manual.</p></div><div id="withdrawals" class="admin-list"></div></section><section class="admin-section"><div class="section-title"><h2>Solicitudes de vendedores</h2><p>Verifica solo cuentas que hayan completado tu proceso de revisión.</p></div><div id="sellers" class="admin-list"></div></section><section class="admin-section"><div class="section-title"><h2>Disputas abiertas</h2><p>Resuelve según las evidencias y reglas del mercado.</p></div><div id="disputes" class="admin-list"></div></section><section class="admin-section"><div class="section-title"><h2>Moderación de ofertas</h2><p>Pausa temporalmente ofertas que requieran revisión.</p></div><div id="offers" class="admin-list"></div></section></main><script src="admin.js"></script><script src="idle.js"></script><script src="back.js"></script>
+  </body>
+</html>

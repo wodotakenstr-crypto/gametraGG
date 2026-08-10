@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Billetera | GameTrade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="wallet.css" />
+    <link rel="stylesheet" href="back.css" />
+    <script src="analytics.js" defer></script>
+  </head>
+  <body>
+    <header><a class="brand" href="index.html"><span>G</span>GameTrade</a><nav><button class="back-button" type="button" data-back>Volver</button><a href="seller-dashboard.html">Mis ofertas</a><a href="orders.html">Mis pedidos</a></nav></header>
+    <main><section class="heading"><p>BILLETERA DE VENDEDOR</p><h1>Saldo USDT</h1><span>Los retiros se procesan manualmente. No hay pago automático en blockchain.</span></section><section class="balances"><article><span>Disponible</span><strong id="available">0.00 USDT</strong></article><article><span>Retenido en retiros</span><strong id="pending">0.00 USDT</strong></article></section><section class="grid"><form id="addressForm"><h2>Dirección de retiro</h2><p>Solo TRC20. Esta dirección nunca es pública.</p><label>Dirección TRON<input id="withdrawalAddress" name="address" maxlength="34" required /></label><button type="submit">Guardar dirección</button><output id="addressStatus"></output></form><form id="withdrawalForm"><h2>Solicitar retiro</h2><p>Mínimo 10 USDT. Tarifa estimada: máximo entre 1% y 1.50 USDT (1.00 de reserva de red y 0.50 de margen). La cotización final se revisa manualmente.</p><label>Importe USDT<input name="amount" type="number" min="10" step="0.01" required /></label><button type="submit">Solicitar retiro manual</button><output id="withdrawalStatus"></output></form></section><section class="history"><h2>Historial de ingresos</h2><div id="credits"></div></section><section class="history"><h2>Historial de retiros</h2><div id="withdrawals"></div></section></main><script src="wallet.js"></script><script src="idle.js"></script><script src="back.js"></script>
+  </body>
+</html>

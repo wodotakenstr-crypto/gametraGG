@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis ofertas | GameTrade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="seller-dashboard.css" />
+    <script src="analytics.js" defer></script>
+    <link rel="stylesheet" href="back.css" />
+    <link rel="stylesheet" href="wallet-summary.css" />
+  </head>
+  <body>
+    <header><a class="brand" href="index.html"><span>G</span>GameTrade</a><nav><button class="back-button" type="button" data-back>Volver</button><a href="wallet.html">Billetera</a><a href="index.html#vender">Nueva oferta</a><a href="orders.html">Mis pedidos</a><a href="index.html#mercado">Mercado</a></nav></header>
+    <main><section class="seller-heading"><p>PANEL DE VENDEDOR</p><h1>Mis ofertas</h1><span id="sellerName"></span><a class="wallet-summary" id="walletSummary" href="wallet.html"><span>Saldo disponible</span><strong>0.00 USDT</strong><small>Ver billetera</small></a><div class="verification" id="verification"></div></section><section class="seller-content"><div class="content-title"><div><h2>Ofertas publicadas</h2><p>Edita, pausa o elimina tus ofertas. Las pausadas no aparecerán en el mercado.</p></div><a href="index.html#vender">+ Crear oferta</a></div><div id="sellerOffers" class="seller-offers"></div></section></main><script src="seller-dashboard.js"></script><script src="idle.js"></script><script src="back.js"></script>
+  </body>
+</html>

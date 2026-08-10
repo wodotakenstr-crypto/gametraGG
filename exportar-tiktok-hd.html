@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exportar TikTok HD | Tecno Service KM</title>
+  <style>
+    :root { --accent: #e00000; } * { box-sizing: border-box; } body { align-items: center; background: #101010; color: white; display: flex; flex-direction: column; font-family: Arial, Helvetica, sans-serif; gap: 16px; justify-content: center; margin: 0; min-height: 100vh; padding: 18px; }
+    canvas { background: #f3f2ee; border: 5px solid #292929; border-radius: 26px; box-shadow: 0 18px 52px #000; height: min(75vh, 640px); max-width: 100%; width: auto; }
+    button { background: var(--accent); border: 0; border-radius: 9px; color: #fff; cursor: pointer; font-size: 15px; font-weight: 900; letter-spacing: .04em; padding: 15px 22px; } button:disabled { background: #555; cursor: wait; } p { color: #bdbdbd; font-size: 13px; margin: 0; text-align: center; }
+  </style>
+</head>
+<body>
+  <canvas id="video" width="1080" height="1920"></canvas>
+  <button id="export">DESCARGAR VIDEO HD</button>
+  <p id="status">Vista previa: 1080 x 1920, 30 fps, 15 segundos.</p>
+  <script>
+    const canvas = document.querySelector('#video'); const ctx = canvas.getContext('2d'); const button = document.querySelector('#export'); const status = document.querySelector('#status');
+    const isGold = new URLSearchParams(location.search).get('tema') === 'dorado';
+    const W = 1080, H = 1920, red = isGold ? '#c9951d' : '#e00000', black = isGold ? '#1b1915' : '#151515', paper = isGold ? '#f4efe4' : '#f3f2ee';
+    if (isGold) document.documentElement.style.setProperty('--accent', red);
+    function rect(x, y, w, h, r, fill) { ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); }
+    function text(value, x, y, size, color = black, weight = 800, align = 'center') { ctx.fillStyle = color; ctx.font = `${weight} ${size}px Arial`; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(value, x, y); }
+    function lines(values, x, y, size, color = black, gap = 1, weight = 800) { values.forEach((line, i) => text(line, x, y + i * size * gap, size, color, weight)); }
+    function brand(dark = false) { text('TECNO', 88, 125, 28, dark ? '#fff' : black, 900, 'left'); text('SERVICE KM', 210, 125, 28, red, 900, 'left'); }
+    function fade(t, from, to) { return Math.max(0, Math.min(1, Math.min((t - from) / .32, (to - t) / .32))); }
+    function sceneProblem(alpha) { ctx.globalAlpha = alpha; brand(); text('SI VENDES POR WHATSAPP', W / 2, 342, 27, red, 900); lines(['ESTO TE ESTA', 'HACIENDO PERDER', 'VENTAS.'], W / 2, 465, 88, black, 1.01, 900); const msgs = [['Cliente nuevo', 'Hola, aun tienes disponibilidad?'], ['Pedido #204', 'Te envie el pago, confirmame.'], ['Cliente nuevo', 'Necesito precio y catalogo.']]; msgs.forEach((m, i) => { rect(105 + (i === 1 ? 120 : 0), 800 + i * 170, 700, 128, 24, '#fff'); text(m[0], 135 + (i === 1 ? 120 : 0), 837 + i * 170, 21, '#777', 700, 'left'); text(m[1], 135 + (i === 1 ? 120 : 0), 880 + i * 170, 25, black, 700, 'left'); }); rect(150, 1370, 780, 84, 20, black); ctx.fillStyle = red; ctx.beginPath(); ctx.arc(205, 1412, 12, 0, Math.PI * 2); ctx.fill(); text('Mensajes sin responder', 550, 1412, 28, '#fff', 800); }
+    function sceneApp(alpha) { ctx.globalAlpha = alpha; brand(); text('LA SOLUCION', W / 2, 340, 27, red, 900); lines(['TU NEGOCIO,', 'ORGANIZADO.'], W / 2, 475, 91, black, 1.02, 900); text('Un sistema hecho para tu forma de vender.', W / 2, 675, 31, black, 600); rect(72, 760, 936, 690, 48, '#121212'); text('Resumen de ventas', 122, 822, 29, '#fff', 800, 'left'); rect(838, 785, 115, 59, 15, red); text('+24%', 895, 815, 24, '#fff', 900); ctx.strokeStyle = '#ffffff22'; ctx.lineWidth = 2; [980, 1080, 1180].forEach(y => { ctx.beginPath(); ctx.moveTo(120, y); ctx.lineTo(960, y); ctx.stroke(); }); const heights = [130, 210, 165, 330, 410]; heights.forEach((h, i) => { rect(145 + i * 154, 1230 - h, 88, h, 10, i === 3 ? red : '#e5e5e5'); text(['L', 'M', 'M', 'J', 'V'][i], 189 + i * 154, 1270, 21, '#aaa', 700); }); rect(120, 1325, 380, 90, 19, '#262626'); rect(520, 1325, 380, 90, 19, '#262626'); text('PEDIDOS', 150, 1355, 19, '#bbb', 800, 'left'); text('128', 150, 1390, 34, '#fff', 900, 'left'); text('VENTAS', 550, 1355, 19, '#bbb', 800, 'left'); text('$2.480', 550, 1390, 34, '#5ce29a', 900, 'left'); }
+    function sceneServices(alpha) { ctx.globalAlpha = alpha; brand(); text('LO QUE CONSTRUIMOS', W / 2, 360, 27, red, 900); lines(['HERRAMIENTAS QUE', 'SI TRABAJAN.'], W / 2, 495, 76, black, 1.03, 900); [['01', 'Tiendas online'], ['02', 'Apps para negocios'], ['03', 'Inventario y sistemas']].forEach((item, i) => { const y = 820 + i * 170; text(item[0], 125, y, 28, red, 900, 'left'); text(item[1], 210, y, 44, black, 850, 'left'); ctx.fillStyle = '#d5d2cb'; ctx.fillRect(120, y + 57, 840, 2); }); }
+    function sceneClose(alpha) { ctx.globalAlpha = alpha; ctx.fillStyle = black; ctx.fillRect(0, 0, W, H); brand(true); text('DEJA DE RESOLVER', W / 2, 530, 77, '#fff', 900); text('TODO POR CHAT.', W / 2, 616, 77, '#fff', 900); text('Empieza a vender mejor.', W / 2, 720, 34, '#ddd', 600); rect(100, 840, 880, 135, 0, red); text('COTIZA TU PROYECTO', W / 2, 907, 49, '#fff', 900); text('@tecno_servicekm', W / 2, 1080, 37, '#fff', 800); text('0412-5585388', W / 2, 1140, 37, '#fff', 800); }
+    function render(time) { ctx.globalAlpha = 1; ctx.fillStyle = paper; ctx.fillRect(0, 0, W, H); sceneProblem(fade(time, 0, 3)); sceneApp(fade(time, 3, 6.5)); sceneServices(fade(time, 6.5, 10)); sceneClose(fade(time, 10, 15)); ctx.globalAlpha = 1; ctx.fillStyle = '#00000022'; ctx.fillRect(95, 1840, 890, 8); ctx.fillStyle = red; ctx.fillRect(95, 1840, 890 * Math.min(time / 15, 1), 8); }
+    let previewStart = performance.now(); function preview(now) { render(((now - previewStart) / 1000) % 15); requestAnimationFrame(preview); } requestAnimationFrame(preview);
+    button.addEventListener('click', () => { const mime = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.42E01E') ? 'video/mp4;codecs=avc1.42E01E' : 'video/webm;codecs=vp9'; const extension = mime.startsWith('video/mp4') ? 'mp4' : 'webm'; const recorder = new MediaRecorder(canvas.captureStream(30), { mimeType: mime, videoBitsPerSecond: 12000000 }); const chunks = []; recorder.ondataavailable = event => chunks.push(event.data); recorder.onstop = () => { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob(chunks, { type: mime })); link.download = `tecno-service-km-tiktok-hd.${extension}`; link.click(); URL.revokeObjectURL(link.href); button.disabled = false; button.textContent = 'DESCARGAR VIDEO HD'; status.textContent = `Video HD descargado en formato ${extension.toUpperCase()}.`; }; button.disabled = true; button.textContent = 'EXPORTANDO VIDEO...'; status.textContent = 'Generando 15 segundos en alta calidad. Espera la descarga.'; recorder.start(); const start = performance.now(); function record(now) { const seconds = (now - start) / 1000; render(Math.min(seconds, 15)); if (seconds < 15) requestAnimationFrame(record); else recorder.stop(); } requestAnimationFrame(record); });
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+.seller-panel label:nth-child(3) {
+  grid-column: auto;
+}
+
+.seller-panel .offer-title {
+  grid-column: 1 / -1;
+}

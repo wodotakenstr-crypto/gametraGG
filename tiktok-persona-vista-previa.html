@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vista previa TikTok con persona | Tecno Service KM</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { align-items: center; background: #111; display: flex; font-family: Arial, Helvetica, sans-serif; justify-content: center; margin: 0; min-height: 100vh; }
+    .video { aspect-ratio: 9 / 16; background: #050505; border: 6px solid #242424; border-radius: 34px; box-shadow: 0 18px 60px #000; max-height: 94vh; overflow: hidden; position: relative; width: min(92vw, 430px); }
+    .portrait { background: radial-gradient(circle at 78% 24%, #004a6b 0, transparent 27%), radial-gradient(circle at 17% 76%, #7d0000 0, transparent 31%), linear-gradient(135deg, #05080e, #010102 63%); inset: 0; overflow: hidden; position: absolute; }
+    .portrait::before { color: #5eeaff; content: 'const negocio = {\A  web: true,\A  ventas: "online",\A  crecimiento: "sin limites"\A};\A\Afunction escalar(idea) {\A  return tecnologia(idea);\A}\A\A<app>\A  <resultados />\A</app>'; font: 700 clamp(15px, 3.5vw, 20px) / 1.65 Consolas, monospace; left: -9%; opacity: .68; position: absolute; text-align: left; top: 13%; transform: rotate(-7deg); white-space: pre; }
+    .portrait::after { background: repeating-linear-gradient(90deg, transparent 0 52px, #00d5ff0c 52px 53px), repeating-linear-gradient(0deg, transparent 0 52px, #e3060610 52px 53px); content: ''; inset: 0; position: absolute; }
+    .scene { align-items: center; display: flex; inset: 0; justify-content: center; opacity: 0; padding: 10%; position: absolute; text-align: center; transform: translateY(24px); }
+    .scene.active { animation: show var(--duration) ease both; }
+    .scene > div { position: relative; z-index: 1; }
+    .top { color: #fff; font-size: 13px; font-weight: 900; left: 9%; letter-spacing: .15em; position: absolute; top: 8%; z-index: 3; }
+    .top span, .red { color: #ed0909; }
+    h1, h2 { color: white; font-size: clamp(34px, 10vw, 59px); line-height: .92; margin: 0; text-transform: uppercase; }
+    h2 { font-size: clamp(31px, 8.7vw, 51px); }
+    p { color: #eee; font-size: clamp(17px, 4.3vw, 23px); font-weight: 700; line-height: 1.25; margin: 21px 0 0; }
+    .tag { background: #e30606; color: #fff; display: inline-block; font-size: clamp(16px, 4.2vw, 22px); font-weight: 900; margin-top: 22px; padding: 10px 13px; text-transform: uppercase; }
+    .list { color: white; display: grid; gap: 15px; text-align: left; }
+    .list div { border-left: 5px solid #e30606; font-size: clamp(23px, 6.2vw, 36px); font-weight: 900; padding-left: 14px; text-transform: uppercase; }
+    .end { background: #e30606; color: white; font-size: clamp(29px, 8vw, 46px); font-weight: 900; line-height: .94; padding: 22px 14px; text-transform: uppercase; }
+    .contact { color: #fff; font-size: clamp(17px, 4.4vw, 23px); font-weight: 800; line-height: 1.55; margin-top: 25px; }
+    .progress { background: #ffffff44; bottom: 22px; height: 4px; left: 10%; position: absolute; right: 10%; z-index: 4; }
+    .progress::after { animation: progress 15s linear infinite; background: #e30606; content: ''; display: block; height: 100%; transform-origin: left; }
+    .label { bottom: 42px; color: #ffffff99; font-size: 12px; left: 10%; position: absolute; z-index: 4; }
+    @keyframes show { 0% { opacity: 0; transform: translateY(24px); } 14%, 86% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-16px); } }
+    @keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  </style>
+</head>
+<body>
+  <main class="video" aria-label="Vista previa del video de TikTok con persona">
+    <div class="portrait"></div><div class="top">TECNO <span>SERVICE KM</span></div>
+    <section class="scene" data-duration="2500"><div><h1>Tu negocio tiene una gran idea.<br><span class="red">Nosotros la hacemos digital.</span></h1></div></section>
+    <section class="scene" data-duration="2500"><div><h2>Mas orden.<br>Mas clientes.<br><span class="red">Mas ventas.</span></h2><p>Sin procesos manuales que frenan tu crecimiento.</p></div></section>
+    <section class="scene" data-duration="3500"><div class="list"><div>Paginas web</div><div>Tiendas online</div><div>Apps moviles</div></div></section>
+    <section class="scene" data-duration="3000"><div class="list"><div>Sistemas a medida</div><div>Inventario</div><div>Apps para negocios</div></div></section>
+    <section class="scene" data-duration="3500"><div><div class="end">Lleva tu marca al siguiente nivel</div><div class="contact">@tecno_servicekm<br>0412-5585388</div><div class="tag">Cotiza hoy</div></div></section>
+    <div class="label">VISTA PREVIA · 15 SEGUNDOS</div><div class="progress"></div>
+  </main>
+  <script>
+    const scenes = [...document.querySelectorAll('.scene')]; let current = 0;
+    function play() { const scene = scenes[current]; scene.style.setProperty('--duration', `${scene.dataset.duration}ms`); scene.classList.remove('active'); void scene.offsetWidth; scene.classList.add('active'); setTimeout(() => { scene.classList.remove('active'); current = (current + 1) % scenes.length; play(); }, Number(scene.dataset.duration)); }
+    play();
+  </script>
+</body>
+</html>

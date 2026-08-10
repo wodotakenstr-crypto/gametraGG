@@ -1,0 +1,21 @@
+.admin-profile-link {
+  border: 1px solid #dce1dc;
+  border-radius: 5px;
+  color: #17222e;
+  font: 700 11px "Space Grotesk", sans-serif;
+  padding: 8px 10px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.admin-profile-link:hover {
+  background: #c7f25c;
+  border-color: #c7f25c;
+}
+
+@media (max-width: 640px) {
+  .admin-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

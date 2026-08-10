@@ -1,0 +1,11 @@
+[Unit]
+Description=Export GameTrade PostgreSQL backup
+
+[Service]
+Type=oneshot
+User=gametrade
+Group=gametrade
+WorkingDirectory=/opt/gametrade
+EnvironmentFile=/etc/gametrade/gametrade.env
+UMask=0077
+ExecStart=/bin/sh -c '/usr/bin/node scripts/export-store.js > /var/backups/gametrade/gametrade-$(date +%%F).json'

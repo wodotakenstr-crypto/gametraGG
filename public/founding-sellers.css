@@ -1,0 +1,18 @@
+.founding-seller {
+  display: grid;
+  gap: 5px;
+  max-width: 430px;
+  margin: 20px 0;
+  padding: 14px 16px;
+  border: 1px solid #b9dd6c;
+  border-radius: 9px;
+  background: #f4fae9;
+  color: #395f25;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.founding-seller strong {
+  color: #294c18;
+  font-size: 14px;
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Logotipo KYM</title>
+  <desc id="desc">Monograma geométrico blanco KYM sobre fondo negro.</desc>
+  <rect width="1600" height="900" fill="#000"/>
+  <!-- K: a vertical spine with two sharp forward strokes. -->
+  <path fill="#fff" d="M290 220h116v182l151-182h139L521 438l187 242H561L406 476v204H290z"/>
+  <!-- Y: split arms resolve into a centered lower stem. -->
+  <path fill="#fff" d="M655 220h122l76 173 76-173h122L911 500v180H795V500z"/>
+  <!-- M: an angular crown keeps the mark compact and machine-like. -->
+  <path fill="#fff" d="M1010 680V220h129l93 207 93-207h129v460h-116V438l-72 165h-68l-71-165v242z"/>
+  <!-- The black notch gives the center of the mark its distinctive cut. -->
+  <path fill="#000" d="M853 393l58 107-58 107-58-107z"/>
+</svg>

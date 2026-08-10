@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis pedidos | GameTrade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="orders.css" />
+    <link rel="stylesheet" href="payment.css" />
+    <link rel="stylesheet" href="order-flow.css" />
+    <link rel="stylesheet" href="order-inbox.css" />
+    <link rel="stylesheet" href="review.css" />
+    <link rel="stylesheet" href="reputation.css" />
+    <link rel="stylesheet" href="payment-dialog.css" />
+    <link rel="stylesheet" href="back.css" />
+    <script src="analytics.js" defer></script>
+  </head>
+  <body>
+    <header><a class="brand" href="index.html"><span>G</span>GameTrade</a><div><button class="back-button" type="button" data-back>Volver</button><div class="notification-area" id="notificationArea"><button class="notifications" id="notificationButton" type="button">Notificaciones <b id="notificationCount">0</b></button><div class="notification-dropdown" id="notificationDropdown" hidden></div></div><a href="index.html#mercado">Mercado</a></div></header>
+    <main><section class="heading"><p>ÁREA PRIVADA</p><h1>Mis pedidos</h1><span id="accountName"></span><div class="notification-banner" id="notificationBanner" hidden></div></section><section class="workspace"><aside><h2>Pedidos</h2><div id="orderList"></div></aside><section class="conversation"><div id="orderDetail"><p>Selecciona un pedido para ver los detalles y el chat.</p></div><div class="messages" id="messages"></div><form id="messageForm" hidden><input id="messageInput" maxlength="1000" placeholder="Escribe un mensaje para el otro participante" required /><button type="submit">Enviar</button></form></section></section></main><dialog class="payment-dialog" id="paymentDialog" aria-labelledby="paymentTitle"><form id="paymentForm"><button class="payment-close" id="paymentCancel" type="button" aria-label="Cerrar">×</button><p>PAGO USDT TRC20</p><h2 id="paymentTitle">Completa el pago</h2><span>Envía el importe exacto y registra el hash para revisión manual.</span><div class="payment-amount" id="paymentAmount"></div><label>Dirección de depósito<div class="payment-address"><input id="paymentAddress" readonly /><button id="copyPaymentAddress" type="button">Copiar</button></div></label><label>Hash de transacción<input id="paymentTransactionId" maxlength="64" pattern="[A-Fa-f0-9]{64}" required placeholder="64 caracteres hexadecimales" /></label><div class="payment-actions"><button class="payment-secondary" id="paymentCancelButton" type="button">Cancelar</button><button class="payment-submit" type="submit">Enviar para revisión</button></div><span class="payment-status" id="paymentStatus" aria-live="polite"></span></form></dialog><dialog class="review-dialog" id="reviewDialog" aria-labelledby="reviewTitle"><form id="reviewForm"><button class="review-close" id="reviewCancel" type="button" aria-label="Cerrar">×</button><p>RESEÑA VERIFICADA</p><h2 id="reviewTitle">¿Cómo fue tu trade?</h2><span>Tu reseña aparecerá en el perfil del vendedor.</span><div class="rating-stars" id="ratingStars" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas"><button type="button" data-rating="1" aria-label="1 estrella">★</button><button type="button" data-rating="2" aria-label="2 estrellas">★</button><button type="button" data-rating="3" aria-label="3 estrellas">★</button><button type="button" data-rating="4" aria-label="4 estrellas">★</button><button type="button" data-rating="5" aria-label="5 estrellas">★</button></div><span class="rating-label" id="ratingLabel">Elige de 1 a 5 estrellas</span><input id="reviewRating" name="rating" type="hidden" required /><label>Comentario<textarea id="reviewComment" name="comment" maxlength="500" minlength="3" placeholder="Cuéntale a otros compradores cómo fue la entrega." required></textarea></label><div class="review-actions"><button class="review-secondary" id="reviewCancelButton" type="button">Cancelar</button><button class="review-submit" type="submit">Publicar reseña</button></div><span class="review-status" id="reviewStatus" aria-live="polite"></span></form></dialog><script src="orders.js"></script><script src="idle.js"></script><script src="back.js"></script>
+  </body>
+</html>

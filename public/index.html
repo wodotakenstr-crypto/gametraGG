@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="GameTrade, mercado de servicios y monedas para videojuegos." />
+    <title>GameTrade | Mercado seguro para gamers</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+    <link rel="manifest" href="site.webmanifest" />
+    <script src="analytics.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="trust.css" />
+    <link rel="stylesheet" href="seller.css" />
+    <link rel="stylesheet" href="seller-offer-form-fix.css" />
+    <link rel="stylesheet" href="founding-sellers.css" />
+    <link rel="stylesheet" href="marketplace.css" />
+    <link rel="stylesheet" href="reputation.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="GameTrade inicio"><span>G</span>GameTrade</a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a href="#mercado" data-i18n="market">Mercado</a>
+        <a href="#como-funciona" data-i18n="how">Cómo funciona</a>
+        <a href="#vender" data-i18n="sell">Vender</a>
+        <a href="seller-dashboard.html">Mis ofertas</a>
+        <a href="orders.html">Mis pedidos</a>
+      </nav>
+      <div class="header-actions">
+        <div class="language-menu"><button class="language" id="languageButton" type="button" aria-label="Cambiar idioma" aria-expanded="false">ES <span>⌄</span></button><div class="language-options" id="languageOptions" hidden><button type="button" data-language="ES">Español</button><button type="button" data-language="EN">English</button><button type="button" data-language="RU">Русский</button></div></div>
+        <div class="account-actions" id="accountActions"><a class="login" href="account.html" data-i18n="login">Iniciar sesión</a><a class="button button-small" href="account.html" data-i18n="register">Crear cuenta</a></div>
+      </div>
+    </header>
+
+    <main id="inicio">
+      <section class="marketplace-hero">
+        <div class="marketplace-intro"><p class="directory-label">MERCADO P2P PARA GAMERS</p><h1>Encuentra tu<br /><span>próximo trade.</span></h1><p>Compra y vende con jugadores reales. Cada oferta muestra precio, reputación y tiempo de entrega.</p><div class="hero-links"><a href="#mercado">Ver ofertas</a><a href="#vender">Empezar a vender</a></div><div class="hero-proof"><span>Ofertas de la comunidad</span><span>Pedidos con seguimiento</span><span>Soporte ante disputas</span></div></div>
+        <div class="game-directory"><div class="directory-title"><span>JUEGOS DESTACADOS</span><a href="#mercado" id="allGamesLink">Ver todos los juegos</a></div><div class="directory-grid"><article data-market-game="Albion"><strong>Albion Online</strong><a href="#mercado">Silver</a><a href="#mercado">Gold</a><a href="#mercado">Items</a><a href="#mercado">Servicios</a></article><article data-market-game="WoW"><strong>World of Warcraft</strong><a href="#mercado">Gold</a><a href="#mercado">Cuentas</a><a href="#mercado">Boosting</a><a href="#mercado">Servicios</a></article><article data-market-game="RuneScape"><strong>RuneScape</strong><a href="#mercado">OSRS Gold</a><a href="#mercado">Cuentas</a><a href="#mercado">Items</a><a href="#mercado">Membresías</a></article><article data-market-game="Lineage 2"><strong>Lineage 2</strong><a href="#mercado">Adena</a><a href="#mercado">Items</a><a href="#mercado">Cuentas</a><a href="#mercado">Boosting</a></article><article data-market-game="Free Fire"><strong>Free Fire</strong><a href="#mercado">Diamantes</a><a href="#mercado">Recargas</a><a href="#mercado">Servicios</a></article><article data-market-game="Roblox"><strong>Roblox</strong><a href="#mercado">Robux</a><a href="#mercado">Gift cards</a><a href="#mercado">Items</a></article></div></div>
+        <aside class="spotlight"><div class="spotlight-ring ring-one"></div><div class="spotlight-ring ring-two"></div><div class="spotlight-chip chip-blue">ALBION<br /><b>SILVER</b></div><div class="spotlight-card"><small>DESTACADO HOY</small><strong>Mercado seguro<br />para gamers</strong><span>Ofertas de jugadores reales</span></div><div class="spotlight-orb"></div></aside>
+      </section>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><i></i><span data-i18n="eyebrow">MERCADO GAMER P2P</span></p>
+          <h1 data-i18n="headline">Compra. Vende.<br /><em>Juega tranquilo.</em></h1>
+          <p class="hero-text" data-i18n="subheadline">Pagos USDT TRC20 con verificación manual durante la beta. Revisa cada pedido antes de confirmar.</p>
+          <div class="hero-actions">
+            <a class="button" href="#mercado" data-i18n="explore">Explorar ofertas</a>
+            <a class="text-link" href="#como-funciona" data-i18n="learn">Ver cómo funciona <span>→</span></a>
+          </div>
+          <div class="proof">
+            <div class="avatars"><b>RK</b><b>MN</b><b>+2K</b></div>
+            <p><strong>Vendedores verificados</strong><br /><span data-i18n="proof">con reputación visible</span></p>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+          <div class="coin coin-a">G</div><div class="coin coin-b">$</div><div class="coin coin-c">✦</div>
+          <div class="trade-card"><span class="status-dot"></span><p>PAGO USDT TRC20</p><strong>Verificación manual</strong><small>La administración revisa el hash durante la beta</small></div>
+          <div class="pixel-grid"></div>
+        </div>
+      </section>
+
+      <section class="market" id="mercado">
+        <div class="section-heading"><div><p class="eyebrow"><i></i><span data-i18n="live">MERCADO EN VIVO</span></p><h2 data-i18n="find">Encuentra lo que buscas</h2></div><label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar juego, moneda o servicio" /></label></div>
+        <div class="trust-strip"><strong>Pago manual en beta</strong><span>Los pagos USDT se verifican manualmente antes de que el vendedor entregue.</span><a href="#reglas">Ver reglas</a></div>
+        <div class="game-tabs" id="gameTabs">
+          <button class="game-tab active" data-game="all">Todos</button>
+          <button class="game-tab" data-game="Free Fire">Free Fire</button>
+          <button class="game-tab" data-game="Roblox">Roblox</button>
+          <button class="game-tab" data-game="WoW">WoW</button>
+          <button class="game-tab" data-game="RuneScape">RuneScape</button>
+          <button class="game-tab" data-game="Lineage 2">Lineage 2</button>
+          <button class="game-tab" data-game="Tibia">Tibia</button>
+          <button class="game-tab" data-game="Albion">Albion</button>
+        </div>
+        <div class="market-layout">
+          <aside class="filters"><div class="filter-title"><span data-i18n="filters">Filtrar</span><button id="resetFilters" type="button" data-i18n="clear">Limpiar</button></div><fieldset><legend data-i18n="product">Tipo de producto</legend><label><input type="checkbox" value="Moneda" checked /> Moneda</label><label><input type="checkbox" value="Item" checked /> Items</label><label><input type="checkbox" value="Servicio" checked /> Servicio</label><label><input type="checkbox" value="Cuenta" checked /> Cuentas</label><label><input type="checkbox" value="Boosting" checked /> Boosting</label><label><input type="checkbox" value="Recarga" checked /> Recargas</label></fieldset><fieldset><legend data-i18n="delivery">Entrega</legend><label><input type="radio" name="delivery" checked /> Cualquier tiempo</label><label><input type="radio" name="delivery" /> Menos de 30 min</label><label><input type="radio" name="delivery" /> En línea ahora</label></fieldset></aside>
+          <div><div class="results-header"><span id="resultCount">6 ofertas disponibles</span><label class="sort-label">Ordenar<select class="sort" id="sortOffers"><option value="recommended">Recomendados</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option></select></label></div><div class="offers" id="offers"></div></div>
+        </div>
+      </section>
+
+      <section class="seller-panel" id="vender"><div><p class="eyebrow"><i></i> PANEL DE VENDEDOR</p><h2>Publica tu propia oferta</h2><p>GameTrade no vende los productos. Los vendedores publican sus ofertas y los compradores eligen la que prefieren.</p><aside class="founding-seller"><strong>Vendedores fundadores</strong><span>Los primeros 20 vendedores verificados reciben 0% de comisión GameTrade en sus primeras 3 ventas completadas.</span></aside><ul><li>Tu precio y tiempo de entrega</li><li>Oferta visible en el mercado</li><li>Pago USDT verificado manualmente durante la beta</li></ul></div><form id="offerForm"><p id="sellerIdentity" class="seller-identity">Inicia sesión como vendedor para publicar.</p><label>Juego<select name="game"><option>Free Fire</option><option>Roblox</option><option>WoW</option><option>RuneScape</option><option>Lineage 2</option><option>Tibia</option><option>Albion</option></select></label><label>Tipo<select name="type"><option>Moneda</option><option>Item</option><option>Servicio</option><option>Cuenta</option><option>Boosting</option><option>Recarga</option></select></label><label class="offer-title">Titulo de la oferta<input name="title" required maxlength="80" placeholder="Ej. Recarga de 500 diamantes" /></label><label>Precio USD<input name="price" required type="number" min="0.01" step="0.01" placeholder="5.00" /></label><label>Tiempo de entrega<input name="delivery" required maxlength="30" placeholder="Ej. 15-30 min" /></label><button class="button" type="submit">Publicar oferta</button><p id="offerStatus" class="offer-status" aria-live="polite"></p></form></section>
+
+      <section class="process" id="como-funciona"><div class="section-heading"><div><p class="eyebrow"><i></i><span data-i18n="protected">PAGO MANUAL EN BETA</span></p><h2 data-i18n="safe">Así funciona el pago</h2></div><p data-i18n="safeText">Un proceso manual y claro para compradores y vendedores, desde el pago USDT hasta la entrega.</p></div><div class="steps"><article><span>01</span><h3 data-i18n="stepOne">Elige una oferta</h3><p data-i18n="stepOneText">Compara precios, tiempo de entrega y reputación real del vendedor.</p></article><article><span>02</span><h3 data-i18n="stepTwo">Envía USDT TRC20</h3><p data-i18n="stepTwoText">Envía el importe indicado y registra el hash para revisión manual.</p></article><article><span>03</span><h3 data-i18n="stepThree">Confirma y recibe</h3><p data-i18n="stepThreeText">Tras la verificación manual, recibe tu pedido y confirma la entrega.</p></article></div></section>
+      <section class="rules" id="reglas"><p class="eyebrow"><i></i> REGLAS BÁSICAS</p><h2>Compra con claridad</h2><div><article><strong>1. No confirmes antes</strong><p>Confirma solo cuando recibas el oro, item o servicio acordado.</p></article><article><strong>2. Guarda evidencia</strong><p>Usa el chat del pedido y conserva capturas de la entrega.</p></article><article><strong>3. Abre una disputa</strong><p>Si hay un problema, no confirmes. Soporte revisará las pruebas.</p></article></div><a class="report-button" href="support.html">Contactar soporte</a></section>
+    </main>
+
+    <footer><a class="brand" href="#inicio"><span>G</span>GameTrade</a><p>© 2026 GameTrade. Mercado independiente para gamers.</p><a href="rules.html">Reglas del mercado</a><a href="privacy.html">Privacidad</a><a href="support.html">Ayuda y soporte</a><a href="https://discord.gg/MwEb5TGnT" target="_blank" rel="noopener noreferrer">Comunidad Discord</a></footer>
+    <script src="app.js"></script>
+    <script src="idle.js"></script>
+  </body>
+</html>

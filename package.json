@@ -1,0 +1,23 @@
+{
+  "name": "gametrade",
+  "version": "1.0.0",
+  "description": "Marketplace local para servicios de videojuegos.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "db:migrate": "node scripts/migrate.js",
+    "db:migrate:import-local": "node scripts/migrate.js --import-local",
+    "db:export": "node scripts/export-store.js",
+    "test:founding-sellers": "node tests/founding-sellers.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "nodemailer": "^9.0.4",
+    "pg": "^8.13.1"
+  }
+}

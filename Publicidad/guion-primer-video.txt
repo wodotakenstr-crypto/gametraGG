@@ -1,0 +1,19 @@
+Duracion: 10 segundos. Formato: vertical 1080 x 1920.
+
+0-2 s
+Pantalla: Logo GameTrade sobre fondo oscuro.
+Texto: "VENDES EN JUEGOS?"
+
+2-5 s
+Pantalla: Logo con destello verde.
+Texto: "PUBLICA TUS OFERTAS"
+
+5-8 s
+Pantalla: Cartel vertical primer-post.svg.
+Texto: "CUENTAS, ITEMS Y SERVICIOS"
+
+8-10 s
+Pantalla: Fondo oscuro y logo.
+Texto: "ENCUENTRA COMPRADORES EN GAMETRADE"
+
+Audio: sin musica para el primer post, o usa musica comercial autorizada dentro de TikTok.

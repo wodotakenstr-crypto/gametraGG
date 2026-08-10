@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi perfil | GameTrade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="profile.css" />
+    <link rel="stylesheet" href="profile-extra.css" />
+    <link rel="stylesheet" href="back.css" />
+    <link rel="stylesheet" href="reputation.css" />
+  </head>
+  <body>
+    <header><a class="brand" href="index.html"><span>G</span>GameTrade</a><div><button class="back-button" type="button" data-back>Volver</button><a href="index.html">Mercado</a></div></header>
+    <main><section class="profile-head"><div class="avatar" id="avatar">G</div><div><p>CUENTA PERSONAL</p><h1 id="profileTitle">Mi perfil</h1><span id="profileRole"></span></div></section><section class="profile-grid"><nav class="profile-nav"><a class="active" href="profile.html">Perfil</a><a href="orders.html">Mis pedidos</a><a href="seller-dashboard.html">Mis ofertas</a><a id="walletLink" href="wallet.html">Billetera</a><button id="logoutButton" type="button">Cerrar sesión</button></nav><form id="profileForm"><h2>Información pública</h2><p>Este nombre será visible en tus ofertas, mensajes y pedidos.</p><label>Nombre público<input id="nameInput" name="name" required minlength="3" maxlength="30" /></label><label>Correo electrónico<input id="emailInput" disabled /></label><div class="email-status" id="emailStatus"></div><label>Tipo de cuenta<input id="roleInput" disabled /></label><button type="submit">Guardar cambios</button><span id="profileStatus" aria-live="polite"></span></form></section><section class="seller-stats profile-trades"><article class="seller-stat"><strong id="completedPurchases">-</strong><span>compras completadas</span></article><article class="seller-stat"><strong id="completedSales">-</strong><span>ventas completadas</span></article><article class="seller-stat"><strong id="receivedReviews">-</strong><span>reseñas recibidas</span></article></section></main><script src="profile.js"></script><script src="idle.js"></script><script src="back.js"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acceso | GameTrade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="account.css" />
+    <link rel="stylesheet" href="account-extra.css" />
+    <script src="analytics.js" defer></script>
+  </head>
+  <body>
+    <main><a class="brand" href="index.html"><span>G</span>GameTrade</a><section class="access"><div class="intro"><p>ACCESO SEGURO</p><h1>Tu cuenta,<br />tus ofertas.</h1><span>Los vendedores gestionan sus ofertas. Los compradores exploran el mercado.</span></div><div class="forms"><form id="loginForm"><h2>Iniciar sesión</h2><label>Correo<input name="email" type="email" required autocomplete="email" /></label><label>Contraseña<input name="password" type="password" required autocomplete="current-password" /></label><a class="forgot-link" href="forgot-password.html">¿Olvidaste tu contraseña?</a><button type="submit">Entrar</button><p id="loginStatus"></p></form><form id="registerForm"><h2>Crear cuenta</h2><label>Nombre público<input name="name" required maxlength="30" /></label><label>Correo<input name="email" type="email" required autocomplete="email" /></label><label>Contraseña<input name="password" type="password" required minlength="8" autocomplete="new-password" /></label><label>Quiero usar GameTrade como<select name="role"><option value="buyer">Comprador</option><option value="seller">Vendedor</option></select></label><label class="terms-check"><input name="acceptTerms" type="checkbox" required /> Acepto las <a href="rules.html" target="_blank">reglas del mercado</a> y entiendo los riesgos de productos virtuales.</label><button type="submit">Crear mi cuenta</button><p id="registerStatus"></p></form></div></section></main><script src="account.js"></script>
+  </body>
+</html>

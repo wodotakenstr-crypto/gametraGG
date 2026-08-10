@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pedidos organizados | Tecno Service KM</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { align-items: center; background: #111; display: flex; font-family: Arial, Helvetica, sans-serif; justify-content: center; margin: 0; min-height: 100vh; }
+    .video { aspect-ratio: 9 / 16; background: #f3f2ee; border: 6px solid #1f1f1f; border-radius: 34px; box-shadow: 0 22px 75px #000; color: #141414; max-height: 94vh; overflow: hidden; position: relative; width: min(92vw, 430px); }
+    .brand { color: #151515; font-size: 12px; font-weight: 900; left: 8%; letter-spacing: .16em; position: absolute; top: 7%; z-index: 20; }
+    .brand b { color: #e00000; }
+    .scene { align-items: center; display: flex; inset: 0; justify-content: center; opacity: 0; padding: 19% 9% 13%; pointer-events: none; position: absolute; text-align: center; transform: translateY(18px); }
+    .scene.active { animation: in var(--duration) ease both; }
+    .scene > div { width: 100%; }
+    .eyebrow { color: #e00000; font-size: 13px; font-weight: 900; letter-spacing: .11em; margin-bottom: 13px; }
+    h1, h2 { font-size: clamp(33px, 9.3vw, 55px); letter-spacing: -.055em; line-height: .91; margin: 0; }
+    h1 strong, .red { color: #e00000; }
+    p { font-size: clamp(16px, 4.2vw, 22px); font-weight: 600; line-height: 1.25; margin: 17px 0 0; }
+    .messages { height: 250px; margin-top: 27px; position: relative; }
+    .message { background: #fff; border-radius: 16px; box-shadow: 0 8px 20px #0002; font-size: 14px; font-weight: 700; left: 0; padding: 14px; position: absolute; text-align: left; width: 82%; }
+    .message:nth-child(1) { top: 4px; transform: rotate(-3deg); }
+    .message:nth-child(2) { left: 18%; top: 70px; transform: rotate(3deg); }
+    .message:nth-child(3) { top: 142px; transform: rotate(-2deg); }
+    .message small { color: #777; display: block; font-size: 11px; margin-bottom: 4px; }
+    .alert { align-items: center; background: #191919; border-radius: 14px; color: white; display: flex; font-size: 14px; font-weight: 800; gap: 9px; justify-content: center; margin: 21px auto 0; padding: 13px; width: 85%; }
+    .alert i { background: #e00000; border-radius: 50%; display: inline-block; height: 10px; width: 10px; }
+    .app { background: #121212; border: 1px solid #ffffff1c; border-radius: 24px; box-shadow: 0 17px 34px #0003; color: white; margin: 23px auto 0; overflow: hidden; padding: 18px; text-align: left; width: 94%; }
+    .app-top { align-items: center; display: flex; font-size: 12px; font-weight: 800; justify-content: space-between; }
+    .app-top span { background: #e00000; border-radius: 8px; padding: 6px 8px; }
+    .chart { align-items: end; background: repeating-linear-gradient(0deg, transparent 0 31px, #ffffff12 31px 32px); border-bottom: 1px solid #ffffff33; display: flex; gap: 8px; height: 105px; margin-top: 15px; padding: 0 4px 8px; }
+    .bar { background: #d8d8d8; border-radius: 5px 5px 0 0; position: relative; width: 15%; }.bar::after { bottom: -21px; color: #ffffff88; content: attr(data-day); font-size: 9px; left: 50%; position: absolute; transform: translateX(-50%); }
+    .bar:nth-child(1) { height: 32%; }.bar:nth-child(2) { height: 49%; }.bar:nth-child(3) { height: 38%; }.bar:nth-child(4) { background: #e00000; height: 78%; }.bar:nth-child(5) { background: #fff; height: 93%; }
+    .orders { display: flex; gap: 9px; margin-top: 14px; }.order { background: #272727; border-radius: 9px; font-size: 10px; padding: 9px; width: 50%; }.order b { color: #56d78c; display: block; font-size: 15px; margin-top: 3px; }
+    .benefits { display: grid; gap: 10px; margin: 24px auto 0; text-align: left; width: 90%; }.benefit { border-bottom: 1px solid #d8d6cf; font-size: clamp(18px, 5vw, 27px); font-weight: 800; padding: 10px 0; }.benefit span { color: #e00000; margin-right: 8px; }
+    .close { background: #151515; color: white; margin: 0 -11%; padding: 76px 9% 22%; }.close h2 { color: white; }.cta { background: #e00000; color: white; font-size: clamp(22px, 6vw, 34px); font-weight: 900; margin: 25px auto 0; padding: 15px; }.contact { color: #ffffffc9; font-size: 17px; font-weight: 800; line-height: 1.55; margin-top: 18px; }
+    .progress { background: #0002; bottom: 21px; height: 4px; left: 9%; position: absolute; right: 9%; z-index: 30; }.progress::after { animation: progress 15s linear infinite; background: #e00000; content: ''; display: block; height: 100%; transform-origin: left; }
+    @keyframes in { 0% { opacity: 0; transform: translateY(18px); } 13%, 86% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-15px); } }
+    @keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  </style>
+</head>
+<body>
+  <main class="video" aria-label="Vista previa TikTok de pedidos organizados">
+    <div class="brand">TECNO <b>SERVICE KM</b></div>
+    <section class="scene" data-duration="3000"><div><div class="eyebrow">SI VENDES POR WHATSAPP</div><h1>Esto te esta haciendo <strong>perder ventas.</strong></h1><div class="messages"><div class="message"><small>Cliente nuevo</small>Hola, aun tienes disponibilidad?</div><div class="message"><small>Pedido #204</small>Te envie el pago, confirmame por favor.</div><div class="message"><small>Cliente nuevo</small>Necesito precio y catalogo.</div></div><div class="alert"><i></i> Mensajes sin responder</div></div></section>
+    <section class="scene" data-duration="3500"><div><div class="eyebrow">LA SOLUCION</div><h2>Tu negocio,<br><span class="red">organizado.</span></h2><p>Un sistema hecho para tu forma de vender.</p><div class="app"><div class="app-top">Resumen de ventas <span>+24%</span></div><div class="chart"><div class="bar" data-day="L"></div><div class="bar" data-day="M"></div><div class="bar" data-day="M"></div><div class="bar" data-day="J"></div><div class="bar" data-day="V"></div></div><div class="orders"><div class="order">Pedidos<b>128</b></div><div class="order">Ventas<b>$2.480</b></div></div></div></div></section>
+    <section class="scene" data-duration="3500"><div><div class="eyebrow">LO QUE CONSTRUIMOS</div><h2>Herramientas que <span class="red">si trabajan.</span></h2><div class="benefits"><div class="benefit"><span>+</span> Tiendas online</div><div class="benefit"><span>+</span> Apps para negocios</div><div class="benefit"><span>+</span> Inventario y sistemas</div></div></div></section>
+    <section class="scene" data-duration="5000"><div class="close"><div class="eyebrow">TECNO SERVICE KM</div><h2>Deja de resolver todo por chat.</h2><p>Empieza a vender mejor.</p><div class="cta">COTIZA TU PROYECTO</div><div class="contact">@tecno_servicekm<br>0412-5585388</div></div></div></section>
+    <div class="progress"></div>
+  </main>
+  <script>
+    const scenes = [...document.querySelectorAll('.scene')]; let current = 0;
+    function play() { const scene = scenes[current]; scene.style.setProperty('--duration', `${scene.dataset.duration}ms`); scene.classList.remove('active'); void scene.offsetWidth; scene.classList.add('active'); setTimeout(() => { scene.classList.remove('active'); current = (current + 1) % scenes.length; play(); }, Number(scene.dataset.duration)); }
+    play();
+  </script>
+</body>
+</html>
