@@ -5,7 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js",
+    "dev": "concurrently \"node --watch server.js\" \"vite --host 0.0.0.0\"",
+    "dev:server": "node --watch server.js",
+    "dev:client": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
     "db:migrate": "node scripts/migrate.js",
     "db:migrate:import-local": "node scripts/migrate.js --import-local",
     "db:export": "node scripts/export-store.js",
@@ -18,6 +23,20 @@
   "dependencies": {
     "express": "^5.2.1",
     "nodemailer": "^9.0.4",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.5",
+    "concurrently": "^10.0.4",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
   }
 }

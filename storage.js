@@ -5,6 +5,7 @@ const { Pool } = require("pg");
 
 const STORE_ID = 1;
 const LOCK_NAME = "gametrade_app_state";
+const emptyState = () => ({ users: [], accounts: [], offers: [], orders: [], messages: [], notifications: [], reviews: [], wallets: [], withdrawals: [], sessions: [] });
 const schemaSql = `
   CREATE SCHEMA IF NOT EXISTS gametrade;
   CREATE TABLE IF NOT EXISTS gametrade.app_state (
@@ -39,6 +40,13 @@ async function migrate(pool, initialState) {
 function createStorage({ databaseUrl, storePath, usePostgres }) {
   const contexts = new AsyncLocalStorage();
   const pool = usePostgres ? createPostgresPool(databaseUrl) : null;
+
+  // A clean checkout has no ignored development store yet. Initialize it so the
+  // local API is usable without requiring seed data or a manual setup step.
+  if (!pool && !fs.existsSync(storePath)) {
+    fs.mkdirSync(path.dirname(storePath), { recursive: true });
+    fs.writeFileSync(storePath, JSON.stringify(emptyState(), null, 2));
+  }
 
   function readStore() {
     if (!pool) return JSON.parse(fs.readFileSync(storePath, "utf8"));

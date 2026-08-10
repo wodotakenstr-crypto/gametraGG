@@ -8,6 +8,10 @@ const { createStorage } = require("./storage");
 const app = express();
 const port = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
+const developmentClientOrigins = new Set([
+  "http://localhost:5173",
+  "http://127.0.0.1:5173"
+]);
 const sessionDurationMs = 8 * 60 * 60 * 1000;
 const platformCommissionRate = 0.05;
 const foundingSellerLimit = 20;
@@ -26,7 +30,7 @@ const paypalLiveWebhookId = process.env.PAYPAL_LIVE_WEBHOOK_ID || "";
 const paypalProcessingFeeRate = Number(process.env.PAYPAL_PROCESSING_FEE_RATE || 0);
 const paypalProcessingFeeFixedCents = Number(process.env.PAYPAL_PROCESSING_FEE_FIXED_CENTS || 0);
 const minimumPaypalPaymentCents = 500;
-const publicPath = path.join(__dirname, "public");
+const clientBuildPath = path.join(__dirname, "client", "dist");
 const storePath = path.join(__dirname, "data", "store.json");
 const storage = createStorage({ databaseUrl: process.env.DATABASE_URL, storePath, usePostgres: isProduction && Boolean(process.env.DATABASE_URL) });
 const { readStore, writeStore } = storage;
@@ -53,13 +57,15 @@ app.use("/data", (request, response) => response.status(404).end());
 app.get("/smtp-setup.html", (request, response) => sendLocalOnlyFile(request, response, "smtp-setup.html"));
 app.get("/smtp-setup.css", (request, response) => sendLocalOnlyFile(request, response, "smtp-setup.css"));
 app.get("/smtp-setup.js", (request, response) => sendLocalOnlyFile(request, response, "smtp-setup.js"));
-app.use(express.static(publicPath));
+app.use(express.static(clientBuildPath));
 app.use("/api", (request, response, next) => {
   if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return next();
   const origin = request.headers.origin;
   if (!origin) return next();
   try {
-    if (new URL(origin).host !== request.headers.host) return response.status(403).json({ error: "Origen de solicitud no permitido." });
+    const isSameOrigin = new URL(origin).host === request.headers.host;
+    const isViteDevelopmentClient = !isProduction && developmentClientOrigins.has(origin);
+    if (!isSameOrigin && !isViteDevelopmentClient) return response.status(403).json({ error: "Origen de solicitud no permitido." });
   } catch (_) {
     return response.status(403).json({ error: "Origen de solicitud no permitido." });
   }
@@ -1385,6 +1391,14 @@ app.post("/api/orders/:orderId/dispute", (request, response) => {
   addNotification(participant.store, participant.order.sellerId, participant.order.id, `El comprador abrió una disputa en el pedido ${participant.order.id}.`);
   writeStore(participant.store);
   response.json(orderWithProduct(participant.store, participant.order));
+});
+
+// React Router owns all non-API routes once the Vite client has been built.
+app.get("/{*splat}", (request, response, next) => {
+  if (request.path.startsWith("/api")) return next();
+  response.sendFile(path.join(clientBuildPath, "index.html"), error => {
+    if (error) next(error);
+  });
 });
 
 app.use((error, request, response, next) => {

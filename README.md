@@ -2,13 +2,30 @@
 
 Marketplace local para ofertas de monedas, items y servicios de videojuegos.
 
-## Ejecutar
+## Desarrollo
 
 ```powershell
-& "C:\Program Files\nodejs\npm.cmd" start
+& "C:\Program Files\nodejs\npm.cmd" install
+& "C:\Program Files\nodejs\npm.cmd" run dev
 ```
 
-Abrir `http://localhost:3000`.
+Abre `http://localhost:5173`. Vite sirve el cliente React y redirige `/api` a Express en `http://localhost:3000`.
+
+## Arquitectura frontend
+
+El cliente está en `client/` y usa React 19, TypeScript, React Router, Vite y Tailwind CSS 4.
+
+- `client/src/app/`: composición de rutas.
+- `client/src/features/`: módulos por dominio (`auth`, `marketplace`, `orders`, `seller`, `admin`).
+- `client/src/components/`: componentes reutilizables y guardas de rutas.
+- `client/src/lib/`: cliente HTTP y contratos compartidos.
+
+Para generar el bundle de producción y servirlo desde Express:
+
+```powershell
+& "C:\Program Files\nodejs\npm.cmd" run build
+& "C:\Program Files\nodejs\npm.cmd" start
+```
 
 ## Estado actual
 
