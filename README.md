@@ -9,11 +9,13 @@ Marketplace local para ofertas de monedas, items y servicios de videojuegos.
 & "C:\Program Files\nodejs\npm.cmd" run dev
 ```
 
-Abre `http://localhost:5173`. Vite sirve el cliente React y redirige `/api` a Express en `http://localhost:3000`.
+Abre `http://localhost:5173` durante el desarrollo. El cliente React consume la API de Express en `http://localhost:3000` y compila el sistema visual original dentro del bundle de Vite.
+
+`npm run dev:server` inicia solo Express en `http://localhost:3000`; `npm run dev:client` inicia solo Vite en `http://localhost:5173`. En producción, Express sirve el bundle React en la raíz. No se debe reemplazar una pantalla hasta lograr paridad visual y funcional con su documento original.
 
 ## Arquitectura frontend
 
-El cliente está en `client/` y usa React 19, TypeScript, React Router, Vite y Tailwind CSS 4.
+El cliente público está en `client/` y usa React 19, TypeScript, React Router, Vite y Tailwind CSS 4. La interfaz en `public/` es la referencia visual: sus reglas CSS se incorporan al bundle y las pantallas se reconstruyen con componentes React, datos y rutas propios.
 
 - `client/src/app/`: composición de rutas.
 - `client/src/features/`: módulos por dominio (`auth`, `marketplace`, `orders`, `seller`, `admin`).

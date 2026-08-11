@@ -7,6 +7,38 @@ export interface Account {
   role: Role;
   emailVerified: boolean;
   isAdmin?: boolean;
+  verified?: boolean;
+  verificationRequested?: boolean;
+  foundingSeller?: boolean;
+}
+
+export interface WalletCredit {
+  id: string;
+  productTitle: string;
+  grossUsdt: number;
+  commissionUsdt: number;
+  paypalMerchantFeeUsdt?: number;
+  netUsdt: number;
+  creditedAt: string;
+}
+
+export interface Withdrawal {
+  id: string;
+  grossCents: number;
+  feeCents: number;
+  netCents: number;
+  address: string;
+  status: string;
+  createdAt: string;
+  payoutTxId?: string;
+}
+
+export interface Wallet {
+  availableUsdt: number;
+  pendingUsdt: number;
+  withdrawalAddress?: string;
+  credits: WalletCredit[];
+  withdrawals: Withdrawal[];
 }
 
 export interface Offer {
@@ -38,6 +70,16 @@ export interface Order {
   status: string;
   createdAt: string;
   depositAddress?: string;
+  paypalSandboxAvailable?: boolean;
+  paypalEnvironment?: "sandbox" | "live";
+  paypalBuyerChargeUsd?: string;
+  grossUsdt?: number;
+  commissionUsdt?: number;
+  paypalMerchantFeeUsdt?: number;
+  sellerNetUsdt?: number;
+  walletCreditedAt?: string;
+  reviewedByBuyer?: boolean;
+  review?: { buyer: string; rating: number; comment: string; createdAt: string } | null;
 }
 
 export interface Message {

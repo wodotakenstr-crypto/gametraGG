@@ -1,5 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap");
-@import "tailwindcss";
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+@import "../../public/styles.css";
+@import "../../public/trust.css";
+@import "../../public/seller.css";
+@import "../../public/seller-offer-form-fix.css";
+@import "../../public/founding-sellers.css";
+@import "../../public/marketplace.css";
+@import "../../public/reputation.css";
 
 @theme {
   --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
@@ -38,4 +46,28 @@ button { cursor: pointer; }
   .message { @apply max-w-[80%] rounded-[8px] bg-[#edf0f1] p-3 text-sm text-ink; }
   .message.mine { @apply ml-auto bg-[#e4f3c4]; }
   .message strong { @apply mb-1 block font-mono text-[10px] text-[#52616e]; }
+}
+
+/* React's shared shell must not inherit page-only layout constraints. */
+.topbar { position: relative; width: 100%; min-width: 0; }
+.main-nav, .header-actions { min-width: 0; }
+.marketplace-hero, .market, .seller-panel, .process, .rules { width: 100%; }
+
+@media (max-width: 760px) {
+  .topbar { height: auto; min-height: 76px; flex-wrap: wrap; gap: 14px; padding-top: 14px; padding-bottom: 14px; }
+  .main-nav { order: 3; flex-basis: 100%; overflow-x: auto; gap: 18px; padding-bottom: 2px; }
+  .main-nav a { white-space: nowrap; }
+  .header-actions { margin-left: auto; gap: 12px; }
+  .header-actions .login { display: none; }
+  .marketplace-intro { max-width: none; }
+  .directory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero-proof { position: static; margin-top: 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero-proof span { text-align: center; }
+}
+
+@media (max-width: 460px) {
+  .topbar { padding-right: 18px; padding-left: 18px; }
+  .brand { font-size: 20px; }
+  .directory-grid { grid-template-columns: 1fr; }
+  .hero-proof { grid-template-columns: 1fr; }
 }

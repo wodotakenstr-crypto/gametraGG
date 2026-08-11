@@ -4,7 +4,7 @@ import { RequireAuth } from "../components/RequireAuth";
 import { AccountPage, LegalPage, NotFoundPage, ProfilePage, SellerProfilePage, VerifyEmailPage } from "../features/account/pages";
 import { AdminPage } from "../features/admin/AdminPage";
 import { HomePage } from "../features/marketplace/HomePage";
-import { OrdersPage } from "../features/orders/OrdersPage";
+import { OrdersPage, PaypalReturnPage } from "../features/orders/OrdersPage";
 import { SellerOffersPage, WalletPage } from "../features/seller/pages";
 
 export function App() {
@@ -20,6 +20,7 @@ export function App() {
       <Route path="privacy" element={<LegalPage title="Privacidad" />} />
       <Route path="refunds" element={<LegalPage title="Compras y reembolsos" />} />
       <Route path="support" element={<LegalPage title="Ayuda y soporte" />} />
+      <Route path="paypal-return" element={<PaypalReturnPage />} />
       <Route element={<RequireAuth />}>
         <Route path="profile" element={<ProfilePage />} />
         <Route path="orders" element={<OrdersPage />} />

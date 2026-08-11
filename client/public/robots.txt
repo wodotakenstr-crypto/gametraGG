@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /wallet
+Disallow: /orders
+Disallow: /profile
+Disallow: /seller/offers
+Disallow: /account
+Sitemap: https://gametradegg.com/sitemap.xml
