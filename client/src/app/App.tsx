@@ -42,7 +42,7 @@ const defaultProducts = [
   { name: "Recarga 10 litros", price: 2200 },
   { name: "Recarga 5 litros", price: 1400 },
 ];
-const removedProductNames = new Set(["Bidón", "Dispensador"]);
+const removedProductNames = new Set(["Bidón", "Dispensador", "Tapas de seguridad", "Sellos termoencogibles"]);
 const removeDiscontinuedProducts = (items: InventoryItem[]) => items.filter((item) => !removedProductNames.has(item.name));
 
 const initialOrders: Order[] = [
@@ -56,8 +56,6 @@ const initialInventory: InventoryItem[] = [
   { id: "recarga-20", name: "Recarga 20 litros", category: "Productos", stock: 48, unit: "bidones", minimum: 12, price: 3500 },
   { id: "recarga-10", name: "Recarga 10 litros", category: "Productos", stock: 31, unit: "bidones", minimum: 10, price: 2200 },
   { id: "recarga-5", name: "Recarga 5 litros", category: "Productos", stock: 22, unit: "bidones", minimum: 8, price: 1400 },
-  { id: "tapas", name: "Tapas de seguridad", category: "Insumos", stock: 180, unit: "unidades", minimum: 60 },
-  { id: "sellos", name: "Sellos termoencogibles", category: "Insumos", stock: 95, unit: "unidades", minimum: 50 },
 ];
 
 const depot = { name: "Local De la Roca", address: "Orlando Letelier 9613, Peñalolén", latitude: -33.4796626, longitude: -70.5332919 };
