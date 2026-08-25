@@ -82,3 +82,11 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .inventory-editor-slot { display: grid; gap: 3px; justify-items: end; }
 .inventory-price { color: #0f718c; font-size: 12px; }
 .inventory-stock-input { width: 72px; border: 1px solid #b9d8df; border-radius: 6px; padding: 7px 8px; color: #244459; font: 700 15px/1 "Manrope", sans-serif; text-align: right; }
+.product-options > button { display: none; }
+.order-product-editors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.order-product-editor { display: grid; gap: 5px; padding: 10px; border: 1px solid #d8e7ea; border-radius: 7px; background: #fff; }
+.order-product-editor > input, .order-product-editor > div input { min-width: 0; border: 0; color: #173b54; font: 700 12px/1.2 "Manrope", sans-serif; outline: none; }
+.order-product-editor > div { display: grid; grid-template-columns: auto 1fr 28px; align-items: center; gap: 3px; color: #15718b; font-weight: 800; }
+.order-product-editor > div input { width: 100%; border-top: 1px solid #e0eaed; padding-top: 5px; }
+.order-product-editor button { width: 28px; height: 28px; border: 0; border-radius: 6px; background: #e0f1f3; color: #16748a; font-size: 20px; cursor: pointer; }
+@media (max-width: 760px) { .order-product-editors { grid-template-columns: 1fr; } }

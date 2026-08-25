@@ -162,6 +162,17 @@ function InventoryEditors({ inventory, onChange }: { inventory: InventoryItem[];
   return <>{inventory.filter((item) => !isUnlimitedProduct(item.name)).map((item, index) => slots[index] && createPortal(<><strong className="inventory-price">{money(item.price ?? 0)}</strong><input className="inventory-stock-input" aria-label={`Cantidad de ${item.name}`} type="number" min="0" value={item.stock} onChange={(event) => onChange(item.id, Number(event.target.value))} /></>, slots[index], item.id))}</>;
 }
 
+function OrderProductEditors({ products, onAdd, onPriceChange, onNameChange }: { products: { name: string; price: number }[]; onAdd: (product: { name: string; price: number }) => void; onPriceChange: (name: string, price: number) => void; onNameChange: (name: string, nextName: string) => void }) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const [draftNames, setDraftNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setSlot(document.querySelector<HTMLElement>(".product-options")));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  if (!slot) return null;
+  return createPortal(<div className="order-product-editors">{products.map((item) => <div className="order-product-editor" key={item.name}><input aria-label={`Nombre de ${item.name}`} value={draftNames[item.name] ?? item.name} onChange={(event) => setDraftNames((names) => ({ ...names, [item.name]: event.target.value }))} onBlur={() => onNameChange(item.name, draftNames[item.name] ?? item.name)} /><div><span>$</span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price} onChange={(event) => onPriceChange(item.name, Number(event.target.value))} /><button type="button" aria-label={`Agregar ${item.name}`} onClick={() => onAdd(item)}>+</button></div></div>)}</div>, slot);
+}
+
 export function App() {
   const [orders, setOrders] = useState(() => loadSaved<Order[]>("agua-clara-orders", initialOrders));
   const [clientList, setClientList] = useState(() => loadSaved<Client[]>("agua-clara-clients", clients));
@@ -295,7 +306,9 @@ export function App() {
   }
    function adjustInventory(id: string, change: number) { setInventory((items) => items.map((item) => item.id === id && !isUnlimitedProduct(item.name) ? { ...item, stock: Math.max(0, item.stock + change) } : item)); }
    function updateInventoryQuantity(id: string, stock: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, stock: Math.max(0, stock) } : item)); }
-  function updateProductPrice(id: string, price: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, price: Math.max(0, price) } : item)); }
+   function updateProductPrice(id: string, price: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, price: Math.max(0, price) } : item)); }
+   function updateOrderProductPrice(name: string, price: number) { const item = inventory.find((productItem) => productItem.name === name); if (item) updateProductPrice(item.id, price); }
+   function updateProductName(name: string, nextName: string) { const trimmedName = nextName.trim(); if (!trimmedName) return; if (isUnlimitedProduct(name)) { unlimitedProducts.delete(name); unlimitedProducts.add(trimmedName); } setInventory((items) => items.map((item) => item.name === name ? { ...item, name: trimmedName } : item)); setProduct((current) => current === name ? trimmedName : current); setCartItems((items) => items.map((item) => item.product === name ? { ...item, product: trimmedName } : item)); }
   function advanceOrder(id: number) {
     const order = orders.find((item) => item.id === id);
     if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
@@ -358,6 +371,7 @@ export function App() {
      {activeSection === "Inventario" && <PricingCatalog inventory={inventory} onChange={updateProductPrice} />}
      </main>
      {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} />}
+     {activeSection === "Pedidos" && <OrderProductEditors products={products} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} />}
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }
