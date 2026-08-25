@@ -41,10 +41,9 @@ const defaultProducts = [
   { name: "Recarga 20 litros", price: 3500 },
   { name: "Recarga 10 litros", price: 2200 },
   { name: "Recarga 5 litros", price: 1400 },
-  { name: "Bidón", price: 8500 },
-  { name: "Dispensador", price: 29990 },
 ];
-const internalOnlyProducts = new Set(["Bidón", "Dispensador"]);
+const removedProductNames = new Set(["Bidón", "Dispensador"]);
+const removeDiscontinuedProducts = (items: InventoryItem[]) => items.filter((item) => !removedProductNames.has(item.name));
 
 const initialOrders: Order[] = [
   { id: 1048, client: "María José González", address: "Los Castaños 184", comuna: "La Florida", phone: "+56 9 8765 4312", product: "Recarga 20 litros", quantity: 2, total: 7000, payment: "Efectivo", status: "En ruta", time: "10:30" },
@@ -57,8 +56,6 @@ const initialInventory: InventoryItem[] = [
   { id: "recarga-20", name: "Recarga 20 litros", category: "Productos", stock: 48, unit: "bidones", minimum: 12, price: 3500 },
   { id: "recarga-10", name: "Recarga 10 litros", category: "Productos", stock: 31, unit: "bidones", minimum: 10, price: 2200 },
   { id: "recarga-5", name: "Recarga 5 litros", category: "Productos", stock: 22, unit: "bidones", minimum: 8, price: 1400 },
-  { id: "bidon", name: "Bidón", category: "Productos", stock: 16, unit: "unidades", minimum: 5, price: 8500 },
-  { id: "dispensador", name: "Dispensador", category: "Productos", stock: 7, unit: "unidades", minimum: 3, price: 29990 },
   { id: "tapas", name: "Tapas de seguridad", category: "Insumos", stock: 180, unit: "unidades", minimum: 60 },
   { id: "sellos", name: "Sellos termoencogibles", category: "Insumos", stock: 95, unit: "unidades", minimum: 50 },
 ];
@@ -116,7 +113,7 @@ function DeliveryProgress({ order }: { order?: Order }) {
 }
 
 function PricingCatalog({ inventory, onChange }: { inventory: InventoryItem[]; onChange: (id: string, price: number) => void }) {
-  const sellable = inventory.filter((item) => item.category === "Productos" && !internalOnlyProducts.has(item.name));
+  const sellable = inventory.filter((item) => item.category === "Productos");
   return <section className="pricing-catalog"><div><p className="section-kicker">LISTA DE PRECIOS</p><h2>Precios de venta</h2><span>Actualiza precios por comuna o promoción antes de crear el pedido.</span></div><div className="pricing-list">{sellable.map((item) => <label key={item.id}><span><b>{item.name}</b><small>Stock: {item.stock} {item.unit}</small></span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0} onChange={(event) => onChange(item.id, Number(event.target.value))} /><em>{money(item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0)}</em></label>)}</div></section>;
 }
 
@@ -148,8 +145,8 @@ export function App() {
   const [phone, setPhone] = useState("");
   const [newClient, setNewClient] = useState<Client>({ name: "", phone: "", address: "", comuna: "" });
   const [clientFilter, setClientFilter] = useState("");
-  const [inventory, setInventory] = useState(() => loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory));
-  const products = inventory.filter((item) => item.category === "Productos" && !internalOnlyProducts.has(item.name)).map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0 }));
+  const [inventory, setInventory] = useState(() => removeDiscontinuedProducts(loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory)));
+  const products = inventory.filter((item) => item.category === "Productos").map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0 }));
   const [newItem, setNewItem] = useState({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   const [driverLocation, setDriverLocation] = useState<DriverLocation>(() => loadSaved<DriverLocation>("agua-clara-driver-location", null));
   const [sharedLoaded, setSharedLoaded] = useState(false);
@@ -177,7 +174,8 @@ export function App() {
       if (!state) return;
       setOrders((current) => JSON.stringify(current) === JSON.stringify(state.orders) ? current : state.orders);
       setClientList((current) => JSON.stringify(current) === JSON.stringify(state.clients) ? current : state.clients);
-      setInventory((current) => JSON.stringify(current) === JSON.stringify(state.inventory) ? current : state.inventory);
+       const cleanedInventory = removeDiscontinuedProducts(state.inventory);
+       setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
       setExpenses((current) => JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
       setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(state.driverLocation) ? current : state.driverLocation);
     };
