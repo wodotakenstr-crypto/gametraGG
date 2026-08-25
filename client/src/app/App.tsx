@@ -193,6 +193,7 @@ export function App() {
   const salesTotal = delivered.reduce((sum, order) => sum + order.total, 0);
   const expensesTotal = expenses.reduce((sum, item) => sum + item.value, 0);
   const nextStop = orders.find((order) => order.status !== "Entregado");
+  const activeDelivery = orders.find((order) => order.status === "En ruta") ?? nextStop;
 
   function selectClient(client: Client) { setSelectedClient(client); setClientSearch(client.name); setAddress(client.address); setComuna(client.comuna); setPhone(client.phone); }
   function addOrder(event: FormEvent) {
@@ -203,7 +204,6 @@ export function App() {
     const total = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     if (!clientList.some((item) => item.phone === client.phone)) setClientList((items) => [client, ...items]);
     setOrders((previous) => [{ id: Math.max(...previous.map((order) => order.id)) + 1, client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note }, ...previous]);
-    setInventory((stock) => stock.map((item) => { const ordered = items.find((orderItem) => orderItem.product === item.name); return ordered ? { ...item, stock: Math.max(0, item.stock - ordered.quantity) } : item; }));
     setNote(""); setQuantity(1); setCartItems([]); setClientSearch(""); setSelectedClient(null); setAddress(""); setComuna(""); setPhone("");
   }
   function addProductToCart(itemToAdd = currentProduct, amount = quantity) { setCartItems((items) => { const existing = items.find((item) => item.product === itemToAdd.name); return existing ? items.map((item) => item.product === itemToAdd.name ? { ...item, quantity: item.quantity + amount } : item) : [...items, { product: itemToAdd.name, quantity: amount, unitPrice: itemToAdd.price }]; }); setQuantity(1); }
@@ -244,8 +244,10 @@ export function App() {
   function advanceOrder(id: number) {
     const order = orders.find((item) => item.id === id);
     if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
+    if (order?.status === "En ruta") setInventory((stock) => stock.map((item) => { const deliveredItem = getOrderItems(order).find((orderItem) => orderItem.product === item.name); return deliveredItem ? { ...item, stock: Math.max(0, item.stock - deliveredItem.quantity) } : item; }));
     setOrders((items) => items.map((order) => order.id !== id ? order : { ...order, status: order.status === "Nuevo" ? "En ruta" : order.status === "En ruta" ? "Entregado" : "Entregado" }));
   }
+  function updateOrderPayment(id: number, payment: PaymentMethod) { setOrders((items) => items.map((order) => order.id === id ? { ...order, payment } : order)); }
   function goTo(section: string) { const path = pagePaths[section]; if (path && window.location.pathname !== path) window.history.pushState({}, "", path); setActiveSection(section); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
   const navItems = [["grid", "Resumen"], ["calendar", "Pedidos"], ["users", "Clientes"], ["box", "Inventario"], ["truck", "Reparto"], ["chart", "Reportes"]];
@@ -299,5 +301,6 @@ export function App() {
       </section>
       <section className="reports-section"><div><p className="section-kicker">REPORTES</p><h2>Resumen de operación</h2><p>Controla el estado de los pedidos y la forma de pago del día.</p></div><div className="report-grid"><article><small>PEDIDOS NUEVOS</small><strong>{orders.filter((order) => order.status === "Nuevo").length}</strong></article><article><small>EN RUTA</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong></article><article><small>ENTREGADOS</small><strong>{delivered.length}</strong></article><article><small>TICKET PROMEDIO</small><strong>{money(orders.length ? orders.reduce((total, order) => total + order.total, 0) / orders.length : 0)}</strong></article></div></section></>}
     </main>
+    {activeSection === "Repartidor" && activeDelivery && <section className="rider-payment"><span>COBRO DE {activeDelivery.client.toUpperCase()}</span><b>Método de pago recibido</b><select value={activeDelivery.payment} onChange={(event) => updateOrderPayment(activeDelivery.id, event.target.value as PaymentMethod)}><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></section>}
   </div>;
 }
