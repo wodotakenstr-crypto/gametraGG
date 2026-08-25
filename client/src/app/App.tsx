@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { divIcon, latLngBounds } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -116,6 +117,23 @@ function DeliveryProgress({ order }: { order?: Order }) {
 function PricingCatalog({ inventory, onChange }: { inventory: InventoryItem[]; onChange: (id: string, price: number) => void }) {
   const sellable = inventory.filter((item) => item.category === "Productos");
   return <section className="pricing-catalog"><div><p className="section-kicker">LISTA DE PRECIOS</p><h2>Precios de venta</h2><span>Actualiza precios por comuna o promoción antes de crear el pedido.</span></div><div className="pricing-list">{sellable.map((item) => <label key={item.id}><span><b>{item.name}</b><small>Stock: {item.stock} {item.unit}</small></span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0} onChange={(event) => onChange(item.id, Number(event.target.value))} /><em>{money(item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0)}</em></label>)}</div></section>;
+}
+
+function RiderPaymentsInCards({ orders, onChange }: { orders: Order[]; onChange: (id: number, payment: PaymentMethod) => void }) {
+  const pending = orders.filter((order) => order.status !== "Entregado");
+  const [cards, setCards] = useState<HTMLElement[]>([]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setCards(Array.from(document.querySelectorAll<HTMLElement>(".rider-orders article")).map((card) => {
+      const existing = card.querySelector<HTMLElement>(".rider-payment-slot");
+      if (existing) return existing;
+      const slot = document.createElement("div");
+      slot.className = "rider-payment-slot";
+      card.querySelector(".rider-action")?.before(slot);
+      return slot;
+    })));
+    return () => cancelAnimationFrame(frame);
+  }, [orders]);
+  return <>{pending.map((order, index) => cards[index] && createPortal(<div className="rider-payment" key={order.id}><b>Método de cobro</b><select aria-label={`Método de pago de ${order.client}`} value={order.payment} onChange={(event) => onChange(order.id, event.target.value as PaymentMethod)}><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></div>, cards[index]))}</>;
 }
 
 export function App() {
@@ -311,6 +329,6 @@ export function App() {
       <section className="reports-section"><div><p className="section-kicker">REPORTES</p><h2>Resumen de operación</h2><p>Controla el estado de los pedidos y la forma de pago del día.</p></div><div className="report-grid"><article><small>PEDIDOS NUEVOS</small><strong>{orders.filter((order) => order.status === "Nuevo").length}</strong></article><article><small>EN RUTA</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong></article><article><small>ENTREGADOS</small><strong>{delivered.length}</strong></article><article><small>TICKET PROMEDIO</small><strong>{money(orders.length ? orders.reduce((total, order) => total + order.total, 0) / orders.length : 0)}</strong></article></div></section></>}
     {activeSection === "Inventario" && <PricingCatalog inventory={inventory} onChange={updateProductPrice} />}
     </main>
-    {activeSection === "Repartidor" && <section className="rider-payments"><p>MÉTODO DE COBRO POR ENTREGA</p>{orders.filter((order) => order.status !== "Entregado").map((order) => <article className="rider-payment" key={order.id}><div><span>#{order.id} · {order.status}</span><b>{order.client}</b></div><select aria-label={`Método de pago de ${order.client}`} value={order.payment} onChange={(event) => updateOrderPayment(order.id, event.target.value as PaymentMethod)}><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></article>)}</section>}
+    {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }
