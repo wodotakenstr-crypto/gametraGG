@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 type PaymentMethod = "Efectivo" | "Transferencia" | "Tarjeta";
 type OrderStatus = "Nuevo" | "En ruta" | "Entregado";
@@ -24,6 +24,7 @@ type Client = { name: string; phone: string; address: string; comuna: string };
 type InventoryItem = { id: string; name: string; category: string; stock: number; unit: string; minimum: number };
 type DriverLocation = { latitude: number; longitude: number; updatedAt: string } | null;
 type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation };
+type DeliveryAlert = { id: number; message: string; createdAt: string };
 
 const clients: Client[] = [
   { name: "María José González", phone: "+56 9 8765 4312", address: "Los Castaños 184", comuna: "La Florida" },
@@ -100,6 +101,10 @@ export function App() {
   const [newItem, setNewItem] = useState({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   const [driverLocation, setDriverLocation] = useState<DriverLocation>(() => loadSaved<DriverLocation>("agua-clara-driver-location", null));
   const [sharedLoaded, setSharedLoaded] = useState(false);
+  const [deliveryAlerts, setDeliveryAlerts] = useState<DeliveryAlert[]>([]);
+  const [showAlerts, setShowAlerts] = useState(false);
+  const previousOrders = useRef<Order[] | null>(null);
+  const locationWatch = useRef<number | null>(null);
   const [product, setProduct] = useState(products[0].name);
   const [quantity, setQuantity] = useState(1);
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
@@ -129,12 +134,26 @@ export function App() {
     const interval = window.setInterval(() => { void fetch("/api/water/state").then((response) => response.ok ? response.json() : null).then(applyState).catch(() => undefined); }, 5000);
     return () => window.clearInterval(interval);
   }, []);
+  useEffect(() => () => { if (locationWatch.current !== null) navigator.geolocation?.clearWatch(locationWatch.current); }, []);
   useEffect(() => {
     if (!sharedLoaded) return;
     const state: SharedWaterState = { orders, clients: clientList, inventory, expenses, driverLocation };
     const timeout = window.setTimeout(() => { void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) }).catch(() => undefined); }, 400);
     return () => window.clearTimeout(timeout);
   }, [orders, clientList, inventory, expenses, driverLocation, sharedLoaded]);
+  useEffect(() => {
+    const previous = previousOrders.current;
+    previousOrders.current = orders;
+    if (!sharedLoaded || !previous || activeSection === "Repartidor") return;
+    const updates = orders.flatMap((order) => {
+      const oldOrder = previous.find((item) => item.id === order.id);
+      return oldOrder && oldOrder.status !== order.status ? [`${order.client}: ${order.status === "En ruta" ? "el repartidor inició la entrega" : "pedido entregado"}.`] : [];
+    });
+    if (!updates.length) return;
+    const alert = { id: Date.now(), message: updates[0], createdAt: new Date().toISOString() };
+    setDeliveryAlerts((items) => [alert, ...items].slice(0, 5));
+    if ("Notification" in window && Notification.permission === "granted") new Notification("De la Roca", { body: alert.message });
+  }, [orders, sharedLoaded, activeSection]);
 
   const currentProduct = products.find((item) => item.name === product)!;
   const draftTotal = currentProduct.price * quantity;
@@ -159,7 +178,16 @@ export function App() {
   function addProductToCart(itemToAdd = currentProduct, amount = quantity) { setCartItems((items) => { const existing = items.find((item) => item.product === itemToAdd.name); return existing ? items.map((item) => item.product === itemToAdd.name ? { ...item, quantity: item.quantity + amount } : item) : [...items, { product: itemToAdd.name, quantity: amount, unitPrice: itemToAdd.price }]; }); setQuantity(1); }
   function removeCartItem(productName: string) { setCartItems((items) => items.filter((item) => item.product !== productName)); }
   function changeCartQuantity(productName: string, change: number) { setCartItems((items) => items.flatMap((item) => item.product !== productName ? [item] : item.quantity + change > 0 ? [{ ...item, quantity: item.quantity + change }] : [])); }
-  function shareDriverLocation() { if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition((position) => setDriverLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude, updatedAt: new Date().toISOString() }), undefined, { enableHighAccuracy: true, timeout: 10000 }); }
+  function shareDriverLocation() {
+    if (!navigator.geolocation) return;
+    if (locationWatch.current !== null) navigator.geolocation.clearWatch(locationWatch.current);
+    const updateLocation = (position: GeolocationPosition) => setDriverLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude, updatedAt: new Date().toISOString() });
+    locationWatch.current = navigator.geolocation.watchPosition(updateLocation, undefined, { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 });
+  }
+  async function enableAlerts() {
+    setShowAlerts((visible) => !visible);
+    if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
+  }
   function addExpense(event: FormEvent) {
     event.preventDefault();
     if (!expenseName || expense <= 0) return;
@@ -182,6 +210,8 @@ export function App() {
   }
   function adjustInventory(id: string, change: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, stock: Math.max(0, item.stock + change) } : item)); }
   function advanceOrder(id: number) {
+    const order = orders.find((item) => item.id === id);
+    if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
     setOrders((items) => items.map((order) => order.id !== id ? order : { ...order, status: order.status === "Nuevo" ? "En ruta" : order.status === "En ruta" ? "Entregado" : "Entregado" }));
   }
   function goTo(section: string) { const path = pagePaths[section]; if (path && window.location.pathname !== path) window.history.pushState({}, "", path); setActiveSection(section); window.scrollTo({ top: 0, behavior: "smooth" }); }
@@ -197,9 +227,9 @@ export function App() {
     </aside>
 
     <main className="workspace" id="top">
-      <header className="top-header"><div><p className="date-line">MARTES, 25 DE AGOSTO</p><h1>{activeSection === "Resumen" ? "Buenos días, Carolina" : activeSection}</h1></div><div className="header-tools"><button className="notification"><Icon name="bell" /><i /></button><button className="new-order" onClick={() => goTo("Pedidos")}><Icon name="plus" /> Nuevo pedido</button></div></header>
+      <header className="top-header"><div><p className="date-line">MARTES, 25 DE AGOSTO</p><h1>{activeSection === "Resumen" ? "Buenos días, Carolina" : activeSection}</h1></div><div className="header-tools"><div className="alert-control"><button className="notification" aria-label="Notificaciones de reparto" onClick={() => void enableAlerts()}><Icon name="bell" />{deliveryAlerts.length > 0 && <i />}</button>{showAlerts && <div className="delivery-alerts"><b>Actividad de reparto</b>{deliveryAlerts.length ? deliveryAlerts.map((alert) => <p key={alert.id}>{alert.message}</p>) : <p>Activa las notificaciones y recibirás avisos cuando el repartidor cambie el estado de un pedido.</p>}</div>}</div><button className="new-order" onClick={() => goTo("Pedidos")}><Icon name="plus" /> Nuevo pedido</button></div></header>
 
-      {activeSection === "Repartidor" && <section className="rider-page"><header><div className="rider-brand"><span className="drop-mark">&#9670;</span><span>DE LA <b>ROCA</b></span></div><div><p>RUTA DE HOY</p><h1>Mis entregas</h1></div><button className="share-location" onClick={shareDriverLocation}><Icon name="pin" size={17} /> Compartir ubicación</button></header><div className="rider-status"><i className="online-dot" /> Tu ubicación se actualiza para administración {driverLocation && <span>· Última actualización: {new Date(driverLocation.updatedAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}</span>}</div><div className="rider-orders">{orders.filter((order) => order.status !== "Entregado").map((order, index) => <article key={order.id}><div className="rider-order-head"><span>PARADA {index + 1} · #{order.id}</span><b className={`status ${order.status.toLowerCase().replace(" ", "-")}`}>{order.status}</b></div><h2>{order.client}</h2><a className="rider-address" target="_blank" rel="noreferrer" href={`https://waze.com/ul?q=${encodeURIComponent(`${order.address}, ${order.comuna}, Chile`)}&navigate=yes`}><Icon name="pin" /> <span><b>{order.address}</b>{order.comuna}</span><em>Abrir Waze</em></a><a className="rider-phone" href={`tel:${order.phone.replace(/\s/g, "")}`}><Icon name="phone" /> {order.phone}</a><div className="rider-products">{getOrderItems(order).map((item) => <span key={item.product}>{item.quantity} × {item.product}</span>)}<strong>{money(order.total)}</strong></div>{order.note && <p className="rider-note">Nota: {order.note}</p>}<button className="rider-action" onClick={() => advanceOrder(order.id)}>{order.status === "Nuevo" ? "Iniciar entrega" : "Marcar como entregado"}</button></article>)}</div></section>}
+      {activeSection === "Repartidor" && <section className="rider-page"><header><div className="rider-brand"><span className="drop-mark">&#9670;</span><span>DE LA <b>ROCA</b></span></div><div><p>RUTA DE HOY</p><h1>Mis entregas</h1></div><button className="share-location" onClick={shareDriverLocation}><Icon name="pin" size={17} /> Compartir ubicación</button></header><div className="rider-status"><i className="online-dot" /> Tu ubicación se actualiza para administración {driverLocation && <span>· Última actualización: {new Date(driverLocation.updatedAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}</span>}</div><div className="rider-orders">{orders.filter((order) => order.status !== "Entregado").map((order, index) => <article key={order.id}><div className="rider-order-head"><span>PARADA {index + 1} · #{order.id}</span><b className={`status ${order.status.toLowerCase().replace(" ", "-")}`}>{order.status}</b></div><h2>{order.client}</h2><a className="rider-address" target="_blank" rel="noreferrer" href={`https://waze.com/ul?q=${encodeURIComponent(`${order.address}, ${order.comuna}, Chile`)}&navigate=yes`}><Icon name="pin" /> <span><b>{order.address}</b>{order.comuna}</span><em>Abrir Waze</em></a><a className="rider-phone" href={`tel:${order.phone.replace(/\s/g, "")}`}><Icon name="phone" /> {order.phone}</a><div className="rider-products">{getOrderItems(order).map((item) => <span key={item.product}>{item.quantity} × {item.product}</span>)}<strong>{money(order.total)}</strong></div>{order.note && <p className="rider-note">Nota: {order.note}</p>}<button className="rider-action" onClick={() => advanceOrder(order.id)}>{order.status === "Nuevo" ? "Iniciar entrega" : "Confirmar entrega"}</button></article>)}</div></section>}
 
       {activeSection === "Resumen" && <><section className="metric-row"><article><span className="metric-icon blue"><Icon name="receipt" /></span><div><small>PEDIDOS DE HOY</small><strong>{orders.length}</strong><em>+3 desde ayer</em></div></article><article><span className="metric-icon yellow"><Icon name="truck" /></span><div><small>EN REPARTO</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong><em>1 por asignar</em></div></article><article><span className="metric-icon green"><Icon name="wallet" /></span><div><small>VENTA DEL DÍA</small><strong>{money(salesTotal)}</strong><em>Pedidos entregados</em></div></article></section><section className="summary-grid"><article className="panel"><p className="section-kicker">PRÓXIMAS ENTREGAS</p><h2>Pedidos pendientes</h2>{orders.filter((order) => order.status !== "Entregado").slice(0, 3).map((order) => <button className="summary-order" key={order.id} onClick={() => goTo("Reparto")}><span>{order.time}</span><b>{order.client}</b><small>{order.comuna} · {money(order.total)}</small></button>)}</article><article className="panel"><p className="section-kicker">CAJA DEL DÍA</p><h2>Resumen rápido</h2><div className="summary-money"><span>Ventas entregadas</span><b>{money(salesTotal)}</b><span>Gastos registrados</span><b className="expense-number">− {money(expensesTotal)}</b><strong>Neto del día <em>{money(salesTotal - expensesTotal)}</em></strong></div><button className="text-button summary-link" onClick={() => goTo("Reportes")}>Ver cierre y reportes</button></article></section></>}
 
@@ -222,7 +252,7 @@ export function App() {
           </form>
         </section>}
 
-        {activeSection === "Reparto" && <section className="panel route-panel" id="reparto"><div className="panel-heading"><div><p className="section-kicker">EN VIVO <span className="live-dot" /></p><h2>Reparto de hoy</h2></div><a className="text-button" target="_blank" rel="noreferrer" href="/repartidor">Abrir anexo repartidor</a></div><div className="driver"><div className="driver-photo">JR</div><div><b>José Ramírez</b><small><i className="online-dot" /> En ruta · Camioneta 02</small></div><a href="tel:+56987654312"><Icon name="phone" size={17} /></a></div>{driverLocation && <a className="driver-location" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${driverLocation.latitude},${driverLocation.longitude}`}><Icon name="pin" size={15} /> Ubicación compartida · {new Date(driverLocation.updatedAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}</a>}<div className="route-list">{orders.filter((order) => order.status !== "Entregado").map((order, index) => <article className="route-stop" key={order.id}><span className="route-line"><i>{index + 1}</i></span><div className="route-content"><div><small>{order.time} · #{order.id}</small><span className={`status ${order.status.toLowerCase().replace(" ", "-")}`}>{order.status}</span></div><b>{order.client}</b><p><Icon name="pin" size={14} /> {order.address}, {order.comuna}</p><a className="route-phone" href={`tel:${order.phone.replace(/\s/g, "")}`}><Icon name="phone" size={14} /> {order.phone}</a><div className="order-detail"><span className="order-products">{getOrderItems(order).map((item) => <span key={item.product}>{item.quantity} × {item.product}</span>)}</span><strong>{money(order.total)}</strong></div>{order.note && <div className="order-note">“{order.note}”</div>}<button className="advance-button" onClick={() => advanceOrder(order.id)}>{order.status === "Nuevo" ? "Enviar a reparto" : "Marcar entregado"}</button></div></article>)}</div></section>}
+        {activeSection === "Reparto" && <section className="panel route-panel" id="reparto"><div className="panel-heading"><div><p className="section-kicker">EN VIVO <span className="live-dot" /></p><h2>Reparto de hoy</h2></div><a className="text-button" target="_blank" rel="noreferrer" href="/repartidor">Abrir anexo repartidor</a></div><div className="driver"><div className="driver-photo">JR</div><div><b>José Ramírez</b><small><i className="online-dot" /> En ruta · Camioneta 02</small></div><a href="tel:+56987654312"><Icon name="phone" size={17} /></a></div>{driverLocation ? <><a className="driver-location" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${driverLocation.latitude},${driverLocation.longitude}`}><Icon name="pin" size={15} /> Ubicación actualizada · {new Date(driverLocation.updatedAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}</a><div className="driver-map"><iframe title="Ubicación actual del repartidor" src={`https://www.google.com/maps?q=${driverLocation.latitude},${driverLocation.longitude}&z=15&output=embed`} /></div></> : <div className="location-pending"><Icon name="pin" size={15} /> Esperando que el repartidor comparta su ubicación.</div>}<div className="route-list">{orders.filter((order) => order.status !== "Entregado").map((order, index) => <article className="route-stop" key={order.id}><span className="route-line"><i>{index + 1}</i></span><div className="route-content"><div><small>{order.time} · #{order.id}</small><span className={`status ${order.status.toLowerCase().replace(" ", "-")}`}>{order.status}</span></div><b>{order.client}</b><p><Icon name="pin" size={14} /> {order.address}, {order.comuna}</p><a className="route-phone" href={`tel:${order.phone.replace(/\s/g, "")}`}><Icon name="phone" size={14} /> {order.phone}</a><div className="order-detail"><span className="order-products">{getOrderItems(order).map((item) => <span key={item.product}>{item.quantity} × {item.product}</span>)}</span><strong>{money(order.total)}</strong></div>{order.note && <div className="order-note">“{order.note}”</div>}<button className="advance-button" onClick={() => advanceOrder(order.id)}>{order.status === "Nuevo" ? "Enviar a reparto" : "Confirmar entrega"}</button></div></article>)}</div></section>}
       </div>}
 
       {activeSection === "Reportes" && <><section className="admin-section"><div className="admin-heading"><div><p className="section-kicker">ADMINISTRACIÓN PRIVADA</p><h2>Cierre de caja · Hoy</h2></div><button className="outline-button"><Icon name="calendar" size={17} /> 25 ago. 2026 <Icon name="chevron" size={15} /></button></div><div className="cash-grid"><article className="cash-card"><div><span className="payment-symbol cash">$</span><small>EFECTIVO RECIBIDO</small></div><strong>{money(totals("Efectivo"))}</strong><p>{delivered.filter((order) => order.payment === "Efectivo").length} pedidos entregados</p></article><article className="cash-card"><div><span className="payment-symbol transfer">↗</span><small>TRANSFERENCIAS</small></div><strong>{money(totals("Transferencia"))}</strong><p>{delivered.filter((order) => order.payment === "Transferencia").length} pedidos entregados</p></article><article className="cash-card"><div><span className="payment-symbol card">▣</span><small>TARJETA</small></div><strong>{money(totals("Tarjeta"))}</strong><p>{delivered.filter((order) => order.payment === "Tarjeta").length} pedidos entregados</p></article><article className="cash-card total-card"><small>TOTAL VENTAS</small><strong>{money(salesTotal)}</strong><p>Solo pedidos entregados</p></article></div>
