@@ -163,15 +163,19 @@ function InventoryEditors({ inventory, onChange }: { inventory: InventoryItem[];
   return <>{inventory.filter((item) => !isUnlimitedProduct(item.name)).map((item, index) => slots[index] && createPortal(<><strong className="inventory-price">{money(item.price ?? 0)}</strong><input className="inventory-stock-input" aria-label={`Cantidad de ${item.name}`} type="number" min="0" value={item.stock} onChange={(event) => onChange(item.id, Number(event.target.value))} /></>, slots[index], item.id))}</>;
 }
 
-function OrderProductEditors({ products, onAdd, onPriceChange, onNameChange }: { products: ProductOption[]; onAdd: (product: ProductOption) => void; onPriceChange: (name: string, price: number) => void; onNameChange: (name: string, nextName: string) => void }) {
+function OrderProductEditors({ products, onAdd, onPriceChange, onNameChange, onCreate }: { products: ProductOption[]; onAdd: (product: ProductOption) => void; onPriceChange: (name: string, price: number) => void; onNameChange: (name: string, nextName: string) => void; onCreate: (name: string, price: number, stock: number) => void }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const [draftNames, setDraftNames] = useState<Record<string, string>>({});
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPrice, setNewPrice] = useState(0);
+  const [newStock, setNewStock] = useState(1);
   useEffect(() => {
     const frame = requestAnimationFrame(() => setSlot(document.querySelector<HTMLElement>(".product-options")));
     return () => cancelAnimationFrame(frame);
   }, []);
   if (!slot) return null;
-  return createPortal(<div className="order-product-editors">{products.map((item) => <div className="order-product-editor" key={item.name}><input aria-label={`Nombre de ${item.name}`} value={draftNames[item.name] ?? item.name} onChange={(event) => setDraftNames((names) => ({ ...names, [item.name]: event.target.value }))} onBlur={() => onNameChange(item.name, draftNames[item.name] ?? item.name)} /><div><span>$</span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price} onChange={(event) => onPriceChange(item.name, Number(event.target.value))} /><button type="button" aria-label={`Agregar ${item.name}`} disabled={!item.unlimited && item.stock <= 0} onClick={() => onAdd(item)}>+</button></div></div>)}</div>, slot);
+  return createPortal(<div className="order-product-editors"><button type="button" className="add-specific-product" onClick={() => setCreating((visible) => !visible)}>+ Agregar producto específico</button>{creating && <form className="specific-product-form" onSubmit={(event) => { event.preventDefault(); if (!newName.trim() || newPrice < 0 || newStock < 1) return; onCreate(newName.trim(), newPrice, newStock); setNewName(""); setNewPrice(0); setNewStock(1); setCreating(false); }}><input required placeholder="Nombre del producto" value={newName} onChange={(event) => setNewName(event.target.value)} /><input required type="number" min="0" placeholder="Precio" value={newPrice || ""} onChange={(event) => setNewPrice(Number(event.target.value))} /><input required type="number" min="1" placeholder="Stock" value={newStock} onChange={(event) => setNewStock(Number(event.target.value))} /><button type="submit">Agregar</button></form>}{products.map((item) => <div className="order-product-editor" key={item.name}><input aria-label={`Nombre de ${item.name}`} value={draftNames[item.name] ?? item.name} onChange={(event) => setDraftNames((names) => ({ ...names, [item.name]: event.target.value }))} onBlur={() => onNameChange(item.name, draftNames[item.name] ?? item.name)} /><div><span>$</span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price} onChange={(event) => onPriceChange(item.name, Number(event.target.value))} /><button type="button" aria-label={`Agregar ${item.name}`} disabled={!item.unlimited && item.stock <= 0} onClick={() => onAdd(item)}>+</button></div></div>)}</div>, slot);
 }
 
 export function App() {
@@ -310,6 +314,7 @@ export function App() {
    function updateProductPrice(id: string, price: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, price: Math.max(0, price) } : item)); }
    function updateOrderProductPrice(name: string, price: number) { const item = inventory.find((productItem) => productItem.name === name); if (item) updateProductPrice(item.id, price); }
    function updateProductName(name: string, nextName: string) { const trimmedName = nextName.trim(); if (!trimmedName) return; if (isUnlimitedProduct(name)) { unlimitedProducts.delete(name); unlimitedProducts.add(trimmedName); } setInventory((items) => items.map((item) => item.name === name ? { ...item, name: trimmedName } : item)); setProduct((current) => current === name ? trimmedName : current); setCartItems((items) => items.map((item) => item.product === name ? { ...item, product: trimmedName } : item)); }
+   function addSpecificProduct(name: string, price: number, stock: number) { setInventory((items) => [...items, { id: `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`, name, category: "Productos", stock, unit: "unidades", minimum: 0, price }]); }
   function advanceOrder(id: number) {
     const order = orders.find((item) => item.id === id);
     if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
@@ -371,7 +376,7 @@ export function App() {
       <section className="reports-section"><div><p className="section-kicker">REPORTES</p><h2>Resumen de operación</h2><p>Controla el estado de los pedidos y la forma de pago del día.</p></div><div className="report-grid"><article><small>PEDIDOS NUEVOS</small><strong>{orders.filter((order) => order.status === "Nuevo").length}</strong></article><article><small>EN RUTA</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong></article><article><small>ENTREGADOS</small><strong>{delivered.length}</strong></article><article><small>TICKET PROMEDIO</small><strong>{money(orders.length ? orders.reduce((total, order) => total + order.total, 0) / orders.length : 0)}</strong></article></div></section></>}
      </main>
      {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} />}
-     {activeSection === "Pedidos" && <OrderProductEditors products={products} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} />}
+     {activeSection === "Pedidos" && <OrderProductEditors products={products} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onCreate={addSpecificProduct} />}
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }
