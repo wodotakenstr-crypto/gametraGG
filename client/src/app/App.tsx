@@ -1,4 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { divIcon, latLngBounds } from "leaflet";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 type PaymentMethod = "Efectivo" | "Transferencia" | "Tarjeta";
 type OrderStatus = "Nuevo" | "En ruta" | "Entregado";
@@ -88,6 +91,19 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
     motorbike: "M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6m14 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6M8 14h5l2-4h3m-9 4 2-5h4m-4 0-2-2H7",
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name]} /></svg>;
+}
+
+const comunaCoordinates: Record<string, [number, number]> = { "La Florida": [-33.533, -70.597], Macul: [-33.49, -70.6], "Ñuñoa": [-33.456, -70.598] };
+const mapIcon = (className: string, symbol: string) => divIcon({ className: "", html: `<span class="live-map-pin ${className}">${symbol}</span>`, iconSize: [38, 38], iconAnchor: [19, 38] });
+const depotIcon = mapIcon("depot", "&#8962;");
+const driverIcon = mapIcon("driver", "&#127949;");
+const destinationIcon = mapIcon("destination", "&#9679;");
+
+function LiveRouteMap({ driverLocation, nextStop }: { driverLocation: DriverLocation; nextStop?: Order }) {
+  const destination = nextStop ? comunaCoordinates[nextStop.comuna] ?? [-33.456, -70.598] : [depot.latitude, depot.longitude] as [number, number];
+  const driver = driverLocation ? [driverLocation.latitude, driverLocation.longitude] as [number, number] : [depot.latitude, depot.longitude] as [number, number];
+  const points: [number, number][] = [[depot.latitude, depot.longitude], driver, destination];
+  return <div className="live-route-map"><MapContainer key={points.flat().join("-")} bounds={latLngBounds(points)} boundsOptions={{ padding: [40, 40] }} scrollWheelZoom><TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /><Marker position={[depot.latitude, depot.longitude]} icon={depotIcon}><Popup><b>Local De la Roca</b><br />{depot.address}</Popup></Marker>{driverLocation && <Marker position={driver} icon={driverIcon}><Popup><b>Repartidor en moto</b><br />GPS actualizado</Popup></Marker>}{nextStop && <Marker position={destination} icon={destinationIcon}><Popup><b>{nextStop.client}</b><br />{nextStop.address}, {nextStop.comuna}</Popup></Marker>}</MapContainer></div>;
 }
 
 export function App() {
@@ -196,6 +212,7 @@ export function App() {
     setShowAlerts((visible) => !visible);
     if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
   }
+  function expandDriverMap() { void document.querySelector<HTMLElement>(".live-route-map")?.requestFullscreen?.(); }
   function addExpense(event: FormEvent) {
     event.preventDefault();
     if (!expenseName || expense <= 0) return;
@@ -259,6 +276,10 @@ export function App() {
             <button className="submit-order" disabled={!clientSearch.trim() || !address.trim() || !comuna.trim() || !phone.trim() || !cartItems.length}><Icon name="plus" /> Agendar pedido</button>
           </form>
         </section>}
+
+        {activeSection === "Reparto" && <LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} />}
+
+        {activeSection === "Reparto" && <button className="full-map-button" onClick={expandDriverMap}><Icon name="pin" size={16} /> Ver mapa grande</button>}
 
         {activeSection === "Reparto" && <section className="route-landmarks"><div><p className="section-kicker">PUNTOS DE LA RUTA</p><h2>Seguimiento del reparto</h2></div><div className="route-landmark-list"><a className="route-landmark depot" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${depot.latitude},${depot.longitude}`}><span><Icon name="home" size={19} /></span><div><small>ORIGEN</small><b>{depot.name}</b><em>{depot.address}</em></div></a><i className="route-connector" /><div className="route-landmark driver-marker"><span><Icon name="motorbike" size={21} /></span><div><small>REPARTIDOR EN VIVO</small><b>José Ramírez · Moto 02</b><em>{driverLocation ? `GPS actualizado ${new Date(driverLocation.updatedAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}` : "Esperando ubicación GPS"}</em></div></div><i className="route-connector" /><div className="route-landmark destination"><span><Icon name="pin" size={20} /></span><div><small>PRÓXIMA ENTREGA</small><b>{nextStop?.client ?? "Sin entregas pendientes"}</b><em>{nextStop ? `${nextStop.address}, ${nextStop.comuna}` : ""}</em></div></div></div></section>}
 
