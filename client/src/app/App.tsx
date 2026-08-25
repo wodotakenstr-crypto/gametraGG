@@ -44,6 +44,7 @@ const defaultProducts = [
   { name: "Bidón", price: 8500 },
   { name: "Dispensador", price: 29990 },
 ];
+const internalOnlyProducts = new Set(["Bidón", "Dispensador"]);
 
 const initialOrders: Order[] = [
   { id: 1048, client: "María José González", address: "Los Castaños 184", comuna: "La Florida", phone: "+56 9 8765 4312", product: "Recarga 20 litros", quantity: 2, total: 7000, payment: "Efectivo", status: "En ruta", time: "10:30" },
@@ -115,7 +116,7 @@ function DeliveryProgress({ order }: { order?: Order }) {
 }
 
 function PricingCatalog({ inventory, onChange }: { inventory: InventoryItem[]; onChange: (id: string, price: number) => void }) {
-  const sellable = inventory.filter((item) => item.category === "Productos");
+  const sellable = inventory.filter((item) => item.category === "Productos" && !internalOnlyProducts.has(item.name));
   return <section className="pricing-catalog"><div><p className="section-kicker">LISTA DE PRECIOS</p><h2>Precios de venta</h2><span>Actualiza precios por comuna o promoción antes de crear el pedido.</span></div><div className="pricing-list">{sellable.map((item) => <label key={item.id}><span><b>{item.name}</b><small>Stock: {item.stock} {item.unit}</small></span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0} onChange={(event) => onChange(item.id, Number(event.target.value))} /><em>{money(item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0)}</em></label>)}</div></section>;
 }
 
@@ -148,7 +149,7 @@ export function App() {
   const [newClient, setNewClient] = useState<Client>({ name: "", phone: "", address: "", comuna: "" });
   const [clientFilter, setClientFilter] = useState("");
   const [inventory, setInventory] = useState(() => loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory));
-  const products = inventory.filter((item) => item.category === "Productos").map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0 }));
+  const products = inventory.filter((item) => item.category === "Productos" && !internalOnlyProducts.has(item.name)).map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0 }));
   const [newItem, setNewItem] = useState({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   const [driverLocation, setDriverLocation] = useState<DriverLocation>(() => loadSaved<DriverLocation>("agua-clara-driver-location", null));
   const [sharedLoaded, setSharedLoaded] = useState(false);
