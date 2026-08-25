@@ -58,6 +58,8 @@ const initialInventory: InventoryItem[] = [
   { id: "sellos", name: "Sellos termoencogibles", category: "Insumos", stock: 95, unit: "unidades", minimum: 50 },
 ];
 
+const depot = { name: "Local De la Roca", address: "Orlando Letelier 9613, Peñalolén", latitude: -33.4796626, longitude: -70.5332919 };
+
 const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
 const loadSaved = <T,>(key: string, fallback: T): T => { try { const saved = localStorage.getItem(key); return saved ? JSON.parse(saved) as T : fallback; } catch { return fallback; } };
 const getOrderItems = (order: Order): OrderItem[] => order.items?.length ? order.items : [{ product: order.product, quantity: order.quantity, unitPrice: order.total / order.quantity }];
@@ -82,6 +84,8 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
     wallet: "M4 6h14a2 2 0 0 1 2 2v10H4a2 2 0 0 1-2-2V6a3 3 0 0 1 3-3h12v3M16 12h2",
     users: "M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-4A4.5 4.5 0 0 0 3 18.5V20m11-15a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm3 8a4 4 0 0 1 4 4v3m-4-14a3 3 0 0 1 0 6",
     box: "M4 7.5 12 3l8 4.5v9L12 21l-8-4.5zm0 0 8 4.5m8-4.5-8 4.5m0 9v-9",
+    home: "m3 10 9-7 9 7v10h-6v-6H9v6H3z",
+    motorbike: "M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6m14 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6M8 14h5l2-4h3m-9 4 2-5h4m-4 0-2-2H7",
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name]} /></svg>;
 }
@@ -165,6 +169,7 @@ export function App() {
   const totals = (method: PaymentMethod) => delivered.filter((order) => order.payment === method).reduce((sum, order) => sum + order.total, 0);
   const salesTotal = delivered.reduce((sum, order) => sum + order.total, 0);
   const expensesTotal = expenses.reduce((sum, item) => sum + item.value, 0);
+  const nextStop = orders.find((order) => order.status !== "Entregado");
 
   function selectClient(client: Client) { setSelectedClient(client); setClientSearch(client.name); setAddress(client.address); setComuna(client.comuna); setPhone(client.phone); }
   function addOrder(event: FormEvent) {
@@ -254,6 +259,8 @@ export function App() {
             <button className="submit-order" disabled={!clientSearch.trim() || !address.trim() || !comuna.trim() || !phone.trim() || !cartItems.length}><Icon name="plus" /> Agendar pedido</button>
           </form>
         </section>}
+
+        {activeSection === "Reparto" && <section className="route-landmarks"><div><p className="section-kicker">PUNTOS DE LA RUTA</p><h2>Seguimiento del reparto</h2></div><div className="route-landmark-list"><a className="route-landmark depot" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${depot.latitude},${depot.longitude}`}><span><Icon name="home" size={19} /></span><div><small>ORIGEN</small><b>{depot.name}</b><em>{depot.address}</em></div></a><i className="route-connector" /><div className="route-landmark driver-marker"><span><Icon name="motorbike" size={21} /></span><div><small>REPARTIDOR EN VIVO</small><b>José Ramírez · Moto 02</b><em>{driverLocation ? `GPS actualizado ${new Date(driverLocation.updatedAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}` : "Esperando ubicación GPS"}</em></div></div><i className="route-connector" /><div className="route-landmark destination"><span><Icon name="pin" size={20} /></span><div><small>PRÓXIMA ENTREGA</small><b>{nextStop?.client ?? "Sin entregas pendientes"}</b><em>{nextStop ? `${nextStop.address}, ${nextStop.comuna}` : ""}</em></div></div></div></section>}
 
         {activeSection === "Reparto" && <section className="panel route-panel" id="reparto"><div className="panel-heading"><div><p className="section-kicker">EN VIVO <span className="live-dot" /></p><h2>Reparto de hoy</h2></div><a className="text-button" target="_blank" rel="noreferrer" href="/repartidor">Abrir anexo repartidor</a></div><div className="driver"><div className="driver-photo">JR</div><div><b>José Ramírez</b><small><i className="online-dot" /> En ruta · Camioneta 02</small></div><a href="tel:+56987654312"><Icon name="phone" size={17} /></a></div>{driverLocation ? <><a className="driver-location" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${driverLocation.latitude},${driverLocation.longitude}`}><Icon name="pin" size={15} /> Ubicación actualizada · {new Date(driverLocation.updatedAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}</a><div className="driver-map"><iframe title="Ubicación actual del repartidor" src={`https://www.google.com/maps?q=${driverLocation.latitude},${driverLocation.longitude}&z=15&output=embed`} /></div></> : <div className="location-pending"><Icon name="pin" size={15} /> Esperando que el repartidor comparta su ubicación.</div>}<div className="route-list">{orders.filter((order) => order.status !== "Entregado").map((order, index) => <article className="route-stop" key={order.id}><span className="route-line"><i>{index + 1}</i></span><div className="route-content"><div><small>{order.time} · #{order.id}</small><span className={`status ${order.status.toLowerCase().replace(" ", "-")}`}>{order.status}</span></div><b>{order.client}</b><p><Icon name="pin" size={14} /> {order.address}, {order.comuna}</p><a className="route-phone" href={`tel:${order.phone.replace(/\s/g, "")}`}><Icon name="phone" size={14} /> {order.phone}</a><div className="order-detail"><span className="order-products">{getOrderItems(order).map((item) => <span key={item.product}>{item.quantity} × {item.product}</span>)}</span><strong>{money(order.total)}</strong></div>{order.note && <div className="order-note">“{order.note}”</div>}<button className="advance-button" onClick={() => advanceOrder(order.id)}>{order.status === "Nuevo" ? "Enviar a reparto" : "Confirmar entrega"}</button></div></article>)}</div></section>}
       </div>}
