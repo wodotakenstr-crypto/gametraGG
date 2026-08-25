@@ -24,7 +24,7 @@ type Order = {
 };
 
 type Client = { name: string; phone: string; address: string; comuna: string };
-type InventoryItem = { id: string; name: string; category: string; stock: number; unit: string; minimum: number };
+type InventoryItem = { id: string; name: string; category: string; stock: number; unit: string; minimum: number; price?: number };
 type DriverLocation = { latitude: number; longitude: number; updatedAt: string } | null;
 type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation };
 type DeliveryAlert = { id: number; message: string; createdAt: string };
@@ -36,7 +36,7 @@ const clients: Client[] = [
   { name: "Clínica Santa Isabel", phone: "+56 2 2345 9087", address: "Av. Irarrázaval 3980", comuna: "Ñuñoa" },
 ];
 
-const products = [
+const defaultProducts = [
   { name: "Recarga 20 litros", price: 3500 },
   { name: "Recarga 10 litros", price: 2200 },
   { name: "Recarga 5 litros", price: 1400 },
@@ -52,11 +52,11 @@ const initialOrders: Order[] = [
 ];
 
 const initialInventory: InventoryItem[] = [
-  { id: "recarga-20", name: "Recarga 20 litros", category: "Productos", stock: 48, unit: "bidones", minimum: 12 },
-  { id: "recarga-10", name: "Recarga 10 litros", category: "Productos", stock: 31, unit: "bidones", minimum: 10 },
-  { id: "recarga-5", name: "Recarga 5 litros", category: "Productos", stock: 22, unit: "bidones", minimum: 8 },
-  { id: "bidon", name: "Bidón", category: "Productos", stock: 16, unit: "unidades", minimum: 5 },
-  { id: "dispensador", name: "Dispensador", category: "Productos", stock: 7, unit: "unidades", minimum: 3 },
+  { id: "recarga-20", name: "Recarga 20 litros", category: "Productos", stock: 48, unit: "bidones", minimum: 12, price: 3500 },
+  { id: "recarga-10", name: "Recarga 10 litros", category: "Productos", stock: 31, unit: "bidones", minimum: 10, price: 2200 },
+  { id: "recarga-5", name: "Recarga 5 litros", category: "Productos", stock: 22, unit: "bidones", minimum: 8, price: 1400 },
+  { id: "bidon", name: "Bidón", category: "Productos", stock: 16, unit: "unidades", minimum: 5, price: 8500 },
+  { id: "dispensador", name: "Dispensador", category: "Productos", stock: 7, unit: "unidades", minimum: 3, price: 29990 },
   { id: "tapas", name: "Tapas de seguridad", category: "Insumos", stock: 180, unit: "unidades", minimum: 60 },
   { id: "sellos", name: "Sellos termoencogibles", category: "Insumos", stock: 95, unit: "unidades", minimum: 50 },
 ];
@@ -113,6 +113,11 @@ function DeliveryProgress({ order }: { order?: Order }) {
   return <section className="delivery-progress"><div className="progress-summary"><div><p>ENTREGA EN CURSO</p><h2>{order?.client ?? "Sin entrega activa"}</h2><span>{order ? `${order.address}, ${order.comuna}` : "No hay pedidos pendientes"}</span></div><div className="scooter-badge"><Icon name="motorbike" size={34} /></div></div><div className="journey-steps">{steps.map((step, index) => <div className={index <= activeStep ? "done" : ""} key={step}><i>{index < activeStep ? <Icon name="check" size={14} /> : index + 1}</i><b>{step}</b></div>)}</div></section>;
 }
 
+function PricingCatalog({ inventory, onChange }: { inventory: InventoryItem[]; onChange: (id: string, price: number) => void }) {
+  const sellable = inventory.filter((item) => item.category === "Productos");
+  return <section className="pricing-catalog"><div><p className="section-kicker">LISTA DE PRECIOS</p><h2>Precios de venta</h2><span>Actualiza precios por comuna o promoción antes de crear el pedido.</span></div><div className="pricing-list">{sellable.map((item) => <label key={item.id}><span><b>{item.name}</b><small>Stock: {item.stock} {item.unit}</small></span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0} onChange={(event) => onChange(item.id, Number(event.target.value))} /><em>{money(item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0)}</em></label>)}</div></section>;
+}
+
 export function App() {
   const [orders, setOrders] = useState(() => loadSaved<Order[]>("agua-clara-orders", initialOrders));
   const [clientList, setClientList] = useState(() => loadSaved<Client[]>("agua-clara-clients", clients));
@@ -125,6 +130,7 @@ export function App() {
   const [newClient, setNewClient] = useState<Client>({ name: "", phone: "", address: "", comuna: "" });
   const [clientFilter, setClientFilter] = useState("");
   const [inventory, setInventory] = useState(() => loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory));
+  const products = inventory.filter((item) => item.category === "Productos").map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0 }));
   const [newItem, setNewItem] = useState({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   const [driverLocation, setDriverLocation] = useState<DriverLocation>(() => loadSaved<DriverLocation>("agua-clara-driver-location", null));
   const [sharedLoaded, setSharedLoaded] = useState(false);
@@ -132,7 +138,7 @@ export function App() {
   const [showAlerts, setShowAlerts] = useState(false);
   const previousOrders = useRef<Order[] | null>(null);
   const locationWatch = useRef<number | null>(null);
-  const [product, setProduct] = useState(products[0].name);
+  const [product, setProduct] = useState(products[0]?.name ?? "");
   const [quantity, setQuantity] = useState(1);
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
   const [payment, setPayment] = useState<PaymentMethod>("Efectivo");
@@ -239,10 +245,11 @@ export function App() {
   function addInventoryItem(event: FormEvent) {
     event.preventDefault();
     if (!newItem.name.trim() || !newItem.stock || !newItem.minimum) return;
-    setInventory((items) => [{ id: `${newItem.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`, name: newItem.name.trim(), category: newItem.category, stock: Number(newItem.stock), unit: newItem.unit.trim() || "unidades", minimum: Number(newItem.minimum) }, ...items]);
+    setInventory((items) => [{ id: `${newItem.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`, name: newItem.name.trim(), category: newItem.category, stock: Number(newItem.stock), unit: newItem.unit.trim() || "unidades", minimum: Number(newItem.minimum), price: 0 }, ...items]);
     setNewItem({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   }
   function adjustInventory(id: string, change: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, stock: Math.max(0, item.stock + change) } : item)); }
+  function updateProductPrice(id: string, price: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, price: Math.max(0, price) } : item)); }
   function advanceOrder(id: number) {
     const order = orders.find((item) => item.id === id);
     if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
@@ -302,6 +309,7 @@ export function App() {
         <div className="expenses-box"><div className="expense-header"><div><h3>Gastos del día</h3><p>Registra los egresos para obtener el cierre real.</p></div><strong>{money(expensesTotal)}</strong></div><div className="expense-items">{expenses.map((item, index) => <div key={`${item.name}-${index}`}><span>{item.name}</span><b>− {money(item.value)}</b><button type="button" aria-label={`Eliminar ${item.name}`} onClick={() => setExpenses((items) => items.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>)}</div><form className="expense-form" onSubmit={addExpense}><input value={expenseName} onChange={(event) => setExpenseName(event.target.value)} placeholder="Ej: Compra de hielo" /><input value={expense || ""} onChange={(event) => setExpense(Number(event.target.value))} type="number" placeholder="Monto" /><button type="submit"><Icon name="plus" size={16} /> Agregar gasto</button></form><div className="net-total"><span>Total después de gastos</span><strong>{money(salesTotal - expensesTotal)}</strong></div></div>
       </section>
       <section className="reports-section"><div><p className="section-kicker">REPORTES</p><h2>Resumen de operación</h2><p>Controla el estado de los pedidos y la forma de pago del día.</p></div><div className="report-grid"><article><small>PEDIDOS NUEVOS</small><strong>{orders.filter((order) => order.status === "Nuevo").length}</strong></article><article><small>EN RUTA</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong></article><article><small>ENTREGADOS</small><strong>{delivered.length}</strong></article><article><small>TICKET PROMEDIO</small><strong>{money(orders.length ? orders.reduce((total, order) => total + order.total, 0) / orders.length : 0)}</strong></article></div></section></>}
+    {activeSection === "Inventario" && <PricingCatalog inventory={inventory} onChange={updateProductPrice} />}
     </main>
     {activeSection === "Repartidor" && <section className="rider-payments"><p>MÉTODO DE COBRO POR ENTREGA</p>{orders.filter((order) => order.status !== "Entregado").map((order) => <article className="rider-payment" key={order.id}><div><span>#{order.id} · {order.status}</span><b>{order.client}</b></div><select aria-label={`Método de pago de ${order.client}`} value={order.payment} onChange={(event) => updateOrderPayment(order.id, event.target.value as PaymentMethod)}><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></article>)}</section>}
   </div>;
