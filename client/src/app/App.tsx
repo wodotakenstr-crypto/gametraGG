@@ -29,6 +29,7 @@ type InventoryItem = { id: string; name: string; category: string; stock: number
 type DriverLocation = { latitude: number; longitude: number; updatedAt: string } | null;
 type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation };
 type DeliveryAlert = { id: number; message: string; createdAt: string };
+type ProductOption = { name: string; price: number; stock: number; unlimited: boolean };
 
 const clients: Client[] = [
   { name: "María José González", phone: "+56 9 8765 4312", address: "Los Castaños 184", comuna: "La Florida" },
@@ -162,7 +163,7 @@ function InventoryEditors({ inventory, onChange }: { inventory: InventoryItem[];
   return <>{inventory.filter((item) => !isUnlimitedProduct(item.name)).map((item, index) => slots[index] && createPortal(<><strong className="inventory-price">{money(item.price ?? 0)}</strong><input className="inventory-stock-input" aria-label={`Cantidad de ${item.name}`} type="number" min="0" value={item.stock} onChange={(event) => onChange(item.id, Number(event.target.value))} /></>, slots[index], item.id))}</>;
 }
 
-function OrderProductEditors({ products, onAdd, onPriceChange, onNameChange }: { products: { name: string; price: number }[]; onAdd: (product: { name: string; price: number }) => void; onPriceChange: (name: string, price: number) => void; onNameChange: (name: string, nextName: string) => void }) {
+function OrderProductEditors({ products, onAdd, onPriceChange, onNameChange }: { products: ProductOption[]; onAdd: (product: ProductOption) => void; onPriceChange: (name: string, price: number) => void; onNameChange: (name: string, nextName: string) => void }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const [draftNames, setDraftNames] = useState<Record<string, string>>({});
   useEffect(() => {
@@ -170,7 +171,7 @@ function OrderProductEditors({ products, onAdd, onPriceChange, onNameChange }: {
     return () => cancelAnimationFrame(frame);
   }, []);
   if (!slot) return null;
-  return createPortal(<div className="order-product-editors">{products.map((item) => <div className="order-product-editor" key={item.name}><input aria-label={`Nombre de ${item.name}`} value={draftNames[item.name] ?? item.name} onChange={(event) => setDraftNames((names) => ({ ...names, [item.name]: event.target.value }))} onBlur={() => onNameChange(item.name, draftNames[item.name] ?? item.name)} /><div><span>$</span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price} onChange={(event) => onPriceChange(item.name, Number(event.target.value))} /><button type="button" aria-label={`Agregar ${item.name}`} onClick={() => onAdd(item)}>+</button></div></div>)}</div>, slot);
+  return createPortal(<div className="order-product-editors">{products.map((item) => <div className="order-product-editor" key={item.name}><input aria-label={`Nombre de ${item.name}`} value={draftNames[item.name] ?? item.name} onChange={(event) => setDraftNames((names) => ({ ...names, [item.name]: event.target.value }))} onBlur={() => onNameChange(item.name, draftNames[item.name] ?? item.name)} /><div><span>$</span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price} onChange={(event) => onPriceChange(item.name, Number(event.target.value))} /><button type="button" aria-label={`Agregar ${item.name}`} disabled={!item.unlimited && item.stock <= 0} onClick={() => onAdd(item)}>+</button></div></div>)}</div>, slot);
 }
 
 export function App() {
@@ -185,7 +186,7 @@ export function App() {
   const [newClient, setNewClient] = useState<Client>({ name: "", phone: "", address: "", comuna: "" });
   const [clientFilter, setClientFilter] = useState("");
   const [inventory, setInventory] = useState(() => ensureInventoryOnlyProducts(removeDiscontinuedProducts(loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory))));
-  const products = inventory.filter((item) => isUnlimitedProduct(item.name)).map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0 }));
+  const products = inventory.filter((item) => item.category === "Productos").map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0, stock: item.stock, unlimited: isUnlimitedProduct(item.name) }));
   const [newItem, setNewItem] = useState({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   const [driverLocation, setDriverLocation] = useState<DriverLocation>(() => loadSaved<DriverLocation>("agua-clara-driver-location", null));
   const [sharedLoaded, setSharedLoaded] = useState(false);
@@ -270,7 +271,7 @@ export function App() {
     setOrders((previous) => [{ id: Math.max(...previous.map((order) => order.id)) + 1, client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note }, ...previous]);
     setNote(""); setQuantity(1); setCartItems([]); setClientSearch(""); setSelectedClient(null); setAddress(""); setComuna(""); setPhone("");
   }
-  function addProductToCart(itemToAdd = currentProduct, amount = quantity) { setCartItems((items) => { const existing = items.find((item) => item.product === itemToAdd.name); return existing ? items.map((item) => item.product === itemToAdd.name ? { ...item, quantity: item.quantity + amount } : item) : [...items, { product: itemToAdd.name, quantity: amount, unitPrice: itemToAdd.price }]; }); setQuantity(1); }
+   function addProductToCart(itemToAdd: ProductOption = currentProduct, amount = quantity) { const inventoryItem = inventory.find((item) => item.name === itemToAdd.name); const existingQuantity = cartItems.find((item) => item.product === itemToAdd.name)?.quantity ?? 0; if (inventoryItem && !isUnlimitedProduct(inventoryItem.name) && existingQuantity + amount > inventoryItem.stock) return; setCartItems((items) => { const existing = items.find((item) => item.product === itemToAdd.name); return existing ? items.map((item) => item.product === itemToAdd.name ? { ...item, quantity: item.quantity + amount } : item) : [...items, { product: itemToAdd.name, quantity: amount, unitPrice: itemToAdd.price }]; }); setQuantity(1); }
   function removeCartItem(productName: string) { setCartItems((items) => items.filter((item) => item.product !== productName)); }
   function changeCartQuantity(productName: string, change: number) { setCartItems((items) => items.flatMap((item) => item.product !== productName ? [item] : item.quantity + change > 0 ? [{ ...item, quantity: item.quantity + change }] : [])); }
   function shareDriverLocation() {
