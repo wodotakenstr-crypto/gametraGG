@@ -89,6 +89,7 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
     box: "M4 7.5 12 3l8 4.5v9L12 21l-8-4.5zm0 0 8 4.5m8-4.5-8 4.5m0 9v-9",
     home: "m3 10 9-7 9 7v10h-6v-6H9v6H3z",
     motorbike: "M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6m14 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6M8 14h5l2-4h3m-9 4 2-5h4m-4 0-2-2H7",
+    check: "m5 12 4.2 4.2L19 6.5",
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name]} /></svg>;
 }
@@ -104,6 +105,12 @@ function LiveRouteMap({ driverLocation, nextStop }: { driverLocation: DriverLoca
   const driver = driverLocation ? [driverLocation.latitude, driverLocation.longitude] as [number, number] : [depot.latitude, depot.longitude] as [number, number];
   const points: [number, number][] = [[depot.latitude, depot.longitude], driver, destination];
   return <div className="live-route-map"><MapContainer key={points.flat().join("-")} bounds={latLngBounds(points)} boundsOptions={{ padding: [40, 40] }} scrollWheelZoom><TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /><Marker position={[depot.latitude, depot.longitude]} icon={depotIcon}><Popup><b>Local De la Roca</b><br />{depot.address}</Popup></Marker>{driverLocation && <Marker position={driver} icon={driverIcon}><Popup><b>Repartidor en moto</b><br />GPS actualizado</Popup></Marker>}{nextStop && <Marker position={destination} icon={destinationIcon}><Popup><b>{nextStop.client}</b><br />{nextStop.address}, {nextStop.comuna}</Popup></Marker>}</MapContainer></div>;
+}
+
+function DeliveryProgress({ order }: { order?: Order }) {
+  const activeStep = order?.status === "Entregado" ? 4 : order?.status === "En ruta" ? 3 : order ? 1 : 0;
+  const steps = ["Creado", "Asignado", "Recogido", "En ruta", "Entregado"];
+  return <section className="delivery-progress"><div className="progress-summary"><div><p>ENTREGA EN CURSO</p><h2>{order?.client ?? "Sin entrega activa"}</h2><span>{order ? `${order.address}, ${order.comuna}` : "No hay pedidos pendientes"}</span></div><div className="scooter-badge"><Icon name="motorbike" size={34} /></div></div><div className="journey-steps">{steps.map((step, index) => <div className={index <= activeStep ? "done" : ""} key={step}><i>{index < activeStep ? <Icon name="check" size={14} /> : index + 1}</i><b>{step}</b></div>)}</div></section>;
 }
 
 export function App() {
@@ -277,7 +284,7 @@ export function App() {
           </form>
         </section>}
 
-        {activeSection === "Reparto" && <LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} />}
+        {activeSection === "Reparto" && <><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} /><DeliveryProgress order={nextStop} /></>}
 
         {activeSection === "Reparto" && <button className="full-map-button" onClick={expandDriverMap}><Icon name="pin" size={16} /> Ver mapa grande</button>}
 
