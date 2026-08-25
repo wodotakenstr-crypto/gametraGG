@@ -184,6 +184,9 @@ export function App() {
   useEffect(() => {
     document.querySelector<HTMLIFrameElement>(".driver-map iframe")?.setAttribute("allowfullscreen", "true");
   }, [activeSection, driverLocation]);
+  useEffect(() => {
+    document.querySelectorAll<HTMLElement>(".rider-products span, .route-content .order-products span").forEach((item) => { item.style.color = "#000"; item.style.fontWeight = "800"; });
+  }, [activeSection, orders]);
 
   const currentProduct = products.find((item) => item.name === product)!;
   const draftTotal = currentProduct.price * quantity;
