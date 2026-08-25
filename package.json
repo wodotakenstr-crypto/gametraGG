@@ -20,6 +20,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": "22.x"
+  },
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
