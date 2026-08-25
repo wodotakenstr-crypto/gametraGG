@@ -42,23 +42,10 @@ const defaultProducts = [
   { name: "Recarga 10 litros", price: 2200 },
   { name: "Recarga 5 litros", price: 1400 },
 ];
-const removedProductNames = new Set(["Bidón", "Dispensador", "Tapas de seguridad", "Sellos termoencogibles"]);
+const removedProductNames = new Set(["Bidón", "Dispensador", "Tapas de seguridad", "Sellos termoencogibles", "Bidón 20 litros", "Bidón 10 litros", "Dispensador de mesa", "Dispensador USB premium", "Dispensador básico USB", "Dispensador con bidón oculto", "Dispensador sobremesa agua fría y caliente", "Dispensador frigobar", "Dispensador sobremesa agua fría, caliente básico", "Dispensador sobremesa agua fría, caliente y temperatura ambiente", "Dispensador manual"]);
 const removeDiscontinuedProducts = (items: InventoryItem[]) => items.filter((item) => !removedProductNames.has(item.name));
 const unlimitedProducts = new Set(["Recarga 20 litros", "Recarga 10 litros", "Recarga 5 litros"]);
 const isUnlimitedProduct = (name: string) => unlimitedProducts.has(name);
-const catalogInventoryProducts: InventoryItem[] = [
-  { id: "bidon-20-litros", name: "Bidón 20 litros", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 2000 },
-  { id: "bidon-10-litros", name: "Bidón 10 litros", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 1500 },
-  { id: "dispensador-de-mesa", name: "Dispensador de mesa", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 7000 },
-  { id: "dispensador-usb-premium", name: "Dispensador USB premium", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 7000 },
-  { id: "dispensador-basico-usb", name: "Dispensador básico USB", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 4000 },
-  { id: "dispensador-bidon-oculto", name: "Dispensador con bidón oculto", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 115000 },
-  { id: "dispensador-sobremesa-fria-caliente", name: "Dispensador sobremesa agua fría y caliente", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 47000 },
-  { id: "dispensador-frigobar", name: "Dispensador frigobar", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 95000 },
-  { id: "dispensador-sobremesa-basico", name: "Dispensador sobremesa agua fría, caliente básico", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 45000 },
-  { id: "dispensador-sobremesa-tres-temperaturas", name: "Dispensador sobremesa agua fría, caliente y temperatura ambiente", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 75000 },
-  { id: "dispensador-manual", name: "Dispensador manual", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 3000 },
-];
 
 const initialOrders: Order[] = [
   { id: 1048, client: "María José González", address: "Los Castaños 184", comuna: "La Florida", phone: "+56 9 8765 4312", product: "Recarga 20 litros", quantity: 2, total: 7000, payment: "Efectivo", status: "En ruta", time: "10:30" },
@@ -71,9 +58,7 @@ const initialInventory: InventoryItem[] = [
   { id: "recarga-20", name: "Recarga 20 litros", category: "Productos", stock: 48, unit: "bidones", minimum: 12, price: 3500 },
   { id: "recarga-10", name: "Recarga 10 litros", category: "Productos", stock: 31, unit: "bidones", minimum: 10, price: 2200 },
   { id: "recarga-5", name: "Recarga 5 litros", category: "Productos", stock: 22, unit: "bidones", minimum: 8, price: 1400 },
-  ...catalogInventoryProducts,
 ];
-const ensureCatalogInventory = (items: InventoryItem[]) => [...items, ...catalogInventoryProducts.filter((product) => !items.some((item) => item.id === product.id))];
 
 const depot = { name: "Local De la Roca", address: "Orlando Letelier 9613, Peñalolén", latitude: -33.4796626, longitude: -70.5332919 };
 
@@ -160,7 +145,7 @@ export function App() {
   const [phone, setPhone] = useState("");
   const [newClient, setNewClient] = useState<Client>({ name: "", phone: "", address: "", comuna: "" });
   const [clientFilter, setClientFilter] = useState("");
-  const [inventory, setInventory] = useState(() => ensureCatalogInventory(removeDiscontinuedProducts(loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory))));
+  const [inventory, setInventory] = useState(() => removeDiscontinuedProducts(loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory)));
   const products = inventory.filter((item) => item.category === "Productos").map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0 }));
   const [newItem, setNewItem] = useState({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   const [driverLocation, setDriverLocation] = useState<DriverLocation>(() => loadSaved<DriverLocation>("agua-clara-driver-location", null));
@@ -189,7 +174,7 @@ export function App() {
       if (!state) return;
       setOrders((current) => JSON.stringify(current) === JSON.stringify(state.orders) ? current : state.orders);
       setClientList((current) => JSON.stringify(current) === JSON.stringify(state.clients) ? current : state.clients);
-       const cleanedInventory = ensureCatalogInventory(removeDiscontinuedProducts(state.inventory));
+       const cleanedInventory = removeDiscontinuedProducts(state.inventory);
        setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
       setExpenses((current) => JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
       setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(state.driverLocation) ? current : state.driverLocation);
