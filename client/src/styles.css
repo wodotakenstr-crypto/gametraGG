@@ -71,3 +71,10 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .user-card .avatar { font-size: 0; }.user-card .avatar::after { content: "RR"; font-size: 11px; }.user-card strong { font-size: 0; }.user-card strong::after { content: "Roxana Rubino"; font-size: 12px; }
 .rider-orders .rider-payment { position: static; z-index: auto; display: grid; grid-template-columns: 1fr 142px; align-items: center; gap: 10px; width: 100%; margin-top: 13px; border: 1px solid #cfe4e7; border-radius: 8px; background: #f2fbfb; padding: 10px; box-shadow: none; }.rider-orders .rider-payment b { color: #285166; font-size: 11px; }.rider-orders .rider-payment select { width: 100%; margin: 0; border: 1px solid #a8d4d9; border-radius: 6px; background: #fff; color: #126a7f; padding: 8px; font-size: 12px; font-weight: 800; outline: 0; }
 @media (max-width: 500px) { .rider-orders .rider-payment { grid-template-columns: 1fr; } }
+.inventory-list article:nth-child(-n+3) .stock-actions { display: none; }
+.inventory-list article:nth-child(-n+3) p { font-size: 0; }
+.inventory-list article:nth-child(-n+3) p::after { content: "Disponibilidad ilimitada"; font-size: 10px; }
+.inventory-list article:nth-child(-n+3) .inventory-quantity strong { font-size: 0; }
+.inventory-list article:nth-child(-n+3) .inventory-quantity strong::after { content: "∞"; font-size: 20px; }
+.inventory-list article:nth-child(-n+3) .inventory-quantity span { font-size: 0; }
+.inventory-list article:nth-child(-n+3) .inventory-quantity span::after { content: "ilimitado"; font-size: 9px; }

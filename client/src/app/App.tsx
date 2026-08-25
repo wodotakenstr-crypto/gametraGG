@@ -44,6 +44,8 @@ const defaultProducts = [
 ];
 const removedProductNames = new Set(["Bidón", "Dispensador", "Tapas de seguridad", "Sellos termoencogibles"]);
 const removeDiscontinuedProducts = (items: InventoryItem[]) => items.filter((item) => !removedProductNames.has(item.name));
+const unlimitedProducts = new Set(["Recarga 20 litros", "Recarga 10 litros", "Recarga 5 litros"]);
+const isUnlimitedProduct = (name: string) => unlimitedProducts.has(name);
 
 const initialOrders: Order[] = [
   { id: 1048, client: "María José González", address: "Los Castaños 184", comuna: "La Florida", phone: "+56 9 8765 4312", product: "Recarga 20 litros", quantity: 2, total: 7000, payment: "Efectivo", status: "En ruta", time: "10:30" },
@@ -112,7 +114,7 @@ function DeliveryProgress({ order }: { order?: Order }) {
 
 function PricingCatalog({ inventory, onChange }: { inventory: InventoryItem[]; onChange: (id: string, price: number) => void }) {
   const sellable = inventory.filter((item) => item.category === "Productos");
-  return <section className="pricing-catalog"><div><p className="section-kicker">LISTA DE PRECIOS</p><h2>Precios de venta</h2><span>Actualiza precios por comuna o promoción antes de crear el pedido.</span></div><div className="pricing-list">{sellable.map((item) => <label key={item.id}><span><b>{item.name}</b><small>Stock: {item.stock} {item.unit}</small></span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0} onChange={(event) => onChange(item.id, Number(event.target.value))} /><em>{money(item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0)}</em></label>)}</div></section>;
+  return <section className="pricing-catalog"><div><p className="section-kicker">LISTA DE PRECIOS</p><h2>Precios de venta</h2><span>Actualiza precios por comuna o promoción antes de crear el pedido.</span></div><div className="pricing-list">{sellable.map((item) => <label key={item.id}><span><b>{item.name}</b><small>{isUnlimitedProduct(item.name) ? "Stock ilimitado" : `Stock: ${item.stock} ${item.unit}`}</small></span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0} onChange={(event) => onChange(item.id, Number(event.target.value))} /><em>{money(item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0)}</em></label>)}</div></section>;
 }
 
 function RiderPaymentsInCards({ orders, onChange }: { orders: Order[]; onChange: (id: number, payment: PaymentMethod) => void }) {
@@ -263,12 +265,12 @@ export function App() {
     setInventory((items) => [{ id: `${newItem.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`, name: newItem.name.trim(), category: newItem.category, stock: Number(newItem.stock), unit: newItem.unit.trim() || "unidades", minimum: Number(newItem.minimum), price: 0 }, ...items]);
     setNewItem({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   }
-  function adjustInventory(id: string, change: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, stock: Math.max(0, item.stock + change) } : item)); }
+   function adjustInventory(id: string, change: number) { setInventory((items) => items.map((item) => item.id === id && !isUnlimitedProduct(item.name) ? { ...item, stock: Math.max(0, item.stock + change) } : item)); }
   function updateProductPrice(id: string, price: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, price: Math.max(0, price) } : item)); }
   function advanceOrder(id: number) {
     const order = orders.find((item) => item.id === id);
     if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
-    if (order?.status === "En ruta") setInventory((stock) => stock.map((item) => { const deliveredItem = getOrderItems(order).find((orderItem) => orderItem.product === item.name); return deliveredItem ? { ...item, stock: Math.max(0, item.stock - deliveredItem.quantity) } : item; }));
+     if (order?.status === "En ruta") setInventory((stock) => stock.map((item) => { const deliveredItem = getOrderItems(order).find((orderItem) => orderItem.product === item.name); return deliveredItem && !isUnlimitedProduct(item.name) ? { ...item, stock: Math.max(0, item.stock - deliveredItem.quantity) } : item; }));
     setOrders((items) => items.map((order) => order.id !== id ? order : { ...order, status: order.status === "Nuevo" ? "En ruta" : order.status === "En ruta" ? "Entregado" : "Entregado" }));
   }
   function updateOrderPayment(id: number, payment: PaymentMethod) { setOrders((items) => items.map((order) => order.id === id ? { ...order, payment } : order)); }
