@@ -196,7 +196,6 @@ export function App() {
   const salesTotal = delivered.reduce((sum, order) => sum + order.total, 0);
   const expensesTotal = expenses.reduce((sum, item) => sum + item.value, 0);
   const nextStop = orders.find((order) => order.status !== "Entregado");
-  const activeDelivery = orders.find((order) => order.status === "En ruta") ?? nextStop;
 
   function selectClient(client: Client) { setSelectedClient(client); setClientSearch(client.name); setAddress(client.address); setComuna(client.comuna); setPhone(client.phone); }
   function addOrder(event: FormEvent) {
@@ -304,6 +303,6 @@ export function App() {
       </section>
       <section className="reports-section"><div><p className="section-kicker">REPORTES</p><h2>Resumen de operación</h2><p>Controla el estado de los pedidos y la forma de pago del día.</p></div><div className="report-grid"><article><small>PEDIDOS NUEVOS</small><strong>{orders.filter((order) => order.status === "Nuevo").length}</strong></article><article><small>EN RUTA</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong></article><article><small>ENTREGADOS</small><strong>{delivered.length}</strong></article><article><small>TICKET PROMEDIO</small><strong>{money(orders.length ? orders.reduce((total, order) => total + order.total, 0) / orders.length : 0)}</strong></article></div></section></>}
     </main>
-    {activeSection === "Repartidor" && activeDelivery && <section className="rider-payment"><span>COBRO DE {activeDelivery.client.toUpperCase()}</span><b>Método de pago recibido</b><select value={activeDelivery.payment} onChange={(event) => updateOrderPayment(activeDelivery.id, event.target.value as PaymentMethod)}><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></section>}
+    {activeSection === "Repartidor" && <section className="rider-payments"><p>MÉTODO DE COBRO POR ENTREGA</p>{orders.filter((order) => order.status !== "Entregado").map((order) => <article className="rider-payment" key={order.id}><div><span>#{order.id} · {order.status}</span><b>{order.client}</b></div><select aria-label={`Método de pago de ${order.client}`} value={order.payment} onChange={(event) => updateOrderPayment(order.id, event.target.value as PaymentMethod)}><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></article>)}</section>}
   </div>;
 }
