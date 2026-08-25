@@ -94,10 +94,10 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
 }
 
 const comunaCoordinates: Record<string, [number, number]> = { "La Florida": [-33.533, -70.597], Macul: [-33.49, -70.6], "Ñuñoa": [-33.456, -70.598] };
-const mapIcon = (className: string, symbol: string) => divIcon({ className: "", html: `<span class="live-map-pin ${className}">${symbol}</span>`, iconSize: [38, 38], iconAnchor: [19, 38] });
-const depotIcon = mapIcon("depot", "&#8962;");
-const driverIcon = mapIcon("driver", "&#127949;");
-const destinationIcon = mapIcon("destination", "&#9679;");
+const mapIcon = (className: string, path: string) => divIcon({ className: "", html: `<span class="live-map-pin ${className}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}" /></svg></span>`, iconSize: [42, 42], iconAnchor: [21, 42] });
+const depotIcon = mapIcon("depot", "m3 10 9-7 9 7v10h-6v-6H9v6H3z");
+const driverIcon = mapIcon("driver", "M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6m14 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6M8 14h5l2-4h3m-9 4 2-5h4m-4 0-2-2H7");
+const destinationIcon = mapIcon("destination", "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8m0 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3");
 
 function LiveRouteMap({ driverLocation, nextStop }: { driverLocation: DriverLocation; nextStop?: Order }) {
   const destination = nextStop ? comunaCoordinates[nextStop.comuna] ?? [-33.456, -70.598] : [depot.latitude, depot.longitude] as [number, number];
