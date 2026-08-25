@@ -154,6 +154,9 @@ export function App() {
     setDeliveryAlerts((items) => [alert, ...items].slice(0, 5));
     if ("Notification" in window && Notification.permission === "granted") new Notification("De la Roca", { body: alert.message });
   }, [orders, sharedLoaded, activeSection]);
+  useEffect(() => {
+    document.querySelector<HTMLIFrameElement>(".driver-map iframe")?.setAttribute("allowfullscreen", "true");
+  }, [activeSection, driverLocation]);
 
   const currentProduct = products.find((item) => item.name === product)!;
   const draftTotal = currentProduct.price * quantity;
