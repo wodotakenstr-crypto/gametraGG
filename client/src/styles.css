@@ -78,3 +78,7 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .inventory-list article:nth-child(-n+3) .inventory-quantity strong::after { content: "∞"; font-size: 20px; }
 .inventory-list article:nth-child(-n+3) .inventory-quantity span { font-size: 0; }
 .inventory-list article:nth-child(-n+3) .inventory-quantity span::after { content: "ilimitado"; font-size: 9px; }
+.inventory-list article:nth-child(n+4) .stock-actions { display: none; }
+.inventory-editor-slot { display: grid; gap: 3px; justify-items: end; }
+.inventory-price { color: #0f718c; font-size: 12px; }
+.inventory-stock-input { width: 72px; border: 1px solid #b9d8df; border-radius: 6px; padding: 7px 8px; color: #244459; font: 700 15px/1 "Manrope", sans-serif; text-align: right; }

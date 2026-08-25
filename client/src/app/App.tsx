@@ -149,6 +149,19 @@ function RiderPaymentsInCards({ orders, onChange }: { orders: Order[]; onChange:
   return <>{pending.map((order, index) => cards[index] && createPortal(<div className="rider-payment" key={order.id}><b>Método de cobro</b><select aria-label={`Método de pago de ${order.client}`} value={order.payment} onChange={(event) => onChange(order.id, event.target.value as PaymentMethod)}><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></div>, cards[index]))}</>;
 }
 
+function InventoryEditors({ inventory, onChange }: { inventory: InventoryItem[]; onChange: (id: string, stock: number) => void }) {
+  const [slots, setSlots] = useState<HTMLElement[]>([]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setSlots(Array.from(document.querySelectorAll<HTMLElement>(".inventory-list article")).filter((_, index) => !isUnlimitedProduct(inventory[index]?.name ?? "")).map((card) => {
+      let slot = card.querySelector<HTMLElement>(".inventory-editor-slot");
+      if (!slot) { slot = document.createElement("div"); slot.className = "inventory-editor-slot"; card.querySelector(".inventory-quantity")?.replaceWith(slot); }
+      return slot;
+    })));
+    return () => cancelAnimationFrame(frame);
+  }, [inventory]);
+  return <>{inventory.filter((item) => !isUnlimitedProduct(item.name)).map((item, index) => slots[index] && createPortal(<><strong className="inventory-price">{money(item.price ?? 0)}</strong><input className="inventory-stock-input" aria-label={`Cantidad de ${item.name}`} type="number" min="0" value={item.stock} onChange={(event) => onChange(item.id, Number(event.target.value))} /></>, slots[index], item.id))}</>;
+}
+
 export function App() {
   const [orders, setOrders] = useState(() => loadSaved<Order[]>("agua-clara-orders", initialOrders));
   const [clientList, setClientList] = useState(() => loadSaved<Client[]>("agua-clara-clients", clients));
@@ -281,6 +294,7 @@ export function App() {
     setNewItem({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
   }
    function adjustInventory(id: string, change: number) { setInventory((items) => items.map((item) => item.id === id && !isUnlimitedProduct(item.name) ? { ...item, stock: Math.max(0, item.stock + change) } : item)); }
+   function updateInventoryQuantity(id: string, stock: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, stock: Math.max(0, stock) } : item)); }
   function updateProductPrice(id: string, price: number) { setInventory((items) => items.map((item) => item.id === id ? { ...item, price: Math.max(0, price) } : item)); }
   function advanceOrder(id: number) {
     const order = orders.find((item) => item.id === id);
@@ -341,8 +355,9 @@ export function App() {
         <div className="expenses-box"><div className="expense-header"><div><h3>Gastos del día</h3><p>Registra los egresos para obtener el cierre real.</p></div><strong>{money(expensesTotal)}</strong></div><div className="expense-items">{expenses.map((item, index) => <div key={`${item.name}-${index}`}><span>{item.name}</span><b>− {money(item.value)}</b><button type="button" aria-label={`Eliminar ${item.name}`} onClick={() => setExpenses((items) => items.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>)}</div><form className="expense-form" onSubmit={addExpense}><input value={expenseName} onChange={(event) => setExpenseName(event.target.value)} placeholder="Ej: Compra de hielo" /><input value={expense || ""} onChange={(event) => setExpense(Number(event.target.value))} type="number" placeholder="Monto" /><button type="submit"><Icon name="plus" size={16} /> Agregar gasto</button></form><div className="net-total"><span>Total después de gastos</span><strong>{money(salesTotal - expensesTotal)}</strong></div></div>
       </section>
       <section className="reports-section"><div><p className="section-kicker">REPORTES</p><h2>Resumen de operación</h2><p>Controla el estado de los pedidos y la forma de pago del día.</p></div><div className="report-grid"><article><small>PEDIDOS NUEVOS</small><strong>{orders.filter((order) => order.status === "Nuevo").length}</strong></article><article><small>EN RUTA</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong></article><article><small>ENTREGADOS</small><strong>{delivered.length}</strong></article><article><small>TICKET PROMEDIO</small><strong>{money(orders.length ? orders.reduce((total, order) => total + order.total, 0) / orders.length : 0)}</strong></article></div></section></>}
-    {activeSection === "Inventario" && <PricingCatalog inventory={inventory} onChange={updateProductPrice} />}
-    </main>
-    {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
+     {activeSection === "Inventario" && <PricingCatalog inventory={inventory} onChange={updateProductPrice} />}
+     </main>
+     {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} />}
+     {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }
