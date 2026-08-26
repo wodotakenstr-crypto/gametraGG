@@ -61,12 +61,7 @@ const inventoryOnlyProducts: InventoryItem[] = [
   { id: "dispensador-manual", name: "Dispensador manual", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 3000 },
 ];
 
-const initialOrders: Order[] = [
-  { id: 1048, client: "María José González", address: "Los Castaños 184", comuna: "La Florida", phone: "+56 9 8765 4312", product: "Recarga 20 litros", quantity: 2, total: 7000, payment: "Efectivo", status: "En ruta", time: "10:30" },
-  { id: 1049, client: "Panadería El Trigal", address: "Av. Vicuña Mackenna 5890", comuna: "Macul", phone: "+56 9 6321 9834", product: "Recarga 20 litros", quantity: 4, total: 14000, payment: "Transferencia", status: "Nuevo", time: "11:00", note: "Entregar por acceso lateral" },
-  { id: 1050, client: "Rodrigo Sepúlveda", address: "Pasaje El Molino 72", comuna: "Ñuñoa", phone: "+56 9 7456 2109", product: "Recarga 10 litros", quantity: 2, total: 4400, payment: "Tarjeta", status: "Nuevo", time: "12:15" },
-  { id: 1047, client: "Clínica Santa Isabel", address: "Av. Irarrázaval 3980", comuna: "Ñuñoa", phone: "+56 2 2345 9087", product: "Recarga 20 litros", quantity: 6, total: 21000, payment: "Transferencia", status: "Entregado", time: "09:15" },
-];
+const initialOrders: Order[] = [];
 
 const initialInventory: InventoryItem[] = [
   { id: "recarga-20", name: "Recarga 20 litros", category: "Productos", stock: 48, unit: "bidones", minimum: 12, price: 3500 },
