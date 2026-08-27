@@ -98,9 +98,10 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .order-product-editor .remove-product { position: absolute; top: 10px; right: 11px; width: 22px; height: 22px; border-radius: 50%; color: #78939d; font-size: 16px; }
 .order-product-editor .remove-product:hover { background: #edf5f6; color: #b0535e; }
 .order-product-editor.added { border-color: #42b98b; background: #f0fbf6; box-shadow: 0 0 0 2px #42b98b26; }
-.order-product-editor.added > div button { background: #42b98b; color: #fff; }
+.order-product-editor.added > div button { width: 48px; background: #42b98b; color: #fff; font-size: 14px; white-space: nowrap; }
 .monthly-close-button { margin-left: 12px; border: 1px solid #b8d8de; border-radius: 7px; background: #eef9fa; color: #147188; padding: 9px 12px; font: 700 11px/1 "Manrope", sans-serif; cursor: pointer; }
 .monthly-closures { margin-top: 18px; padding: 18px; border: 1px solid #d8e7ea; border-radius: 10px; background: #f6fbfc; }.monthly-closures h3 { margin: 2px 0 12px; color: #173b54; }.monthly-closures div { display: flex; justify-content: space-between; gap: 15px; padding: 9px 0; border-top: 1px solid #dfecee; color: #496b7b; font-size: 12px; }.monthly-closures span { color: #72909b; }
+.monthly-closures button { margin-left: 10px; border: 1px solid #b8d8de; border-radius: 5px; background: #fff; color: #147188; padding: 5px 8px; font-size: 10px; font-weight: 700; cursor: pointer; }
 .order-product-editor > input { width: calc(100% - 24px); min-height: 18px; padding: 0; border: 0; background: transparent; color: #173b54; font: 800 12px/1.3 "Manrope", sans-serif; outline: none; }
 .order-product-editor > input:focus { color: #126f86; }
 .order-product-editor > div { display: grid; grid-template-columns: auto 1fr 32px; align-items: center; gap: 6px; color: #15718b; font-weight: 800; }
