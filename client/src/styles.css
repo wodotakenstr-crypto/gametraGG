@@ -94,6 +94,7 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .specific-product-form button { border: 0; border-radius: 6px; background: #16758a; color: #fff; padding: 0 14px; font: 700 11px/1 "Manrope", sans-serif; cursor: pointer; }
 .order-product-editor { position: relative; display: grid; gap: 12px; min-height: 92px; padding: 17px 17px 14px; border: 1px solid #d5e5e8; border-radius: 11px; background: #fff; box-shadow: 0 3px 10px #183b4a0a; transition: border-color .2s, box-shadow .2s, transform .2s; }
 .order-product-editor:hover { border-color: #8ec5ce; box-shadow: 0 7px 18px #183b4a12; transform: translateY(-1px); }
+.order-product-editor[draggable="true"] { cursor: grab; }.order-product-editor[draggable="true"]:active { cursor: grabbing; }
 .remove-product { justify-self: end; border: 0; background: transparent; color: #a66b73; font-size: 18px; line-height: 1; cursor: pointer; }
 .order-product-editor .remove-product { position: absolute; top: 10px; right: 11px; width: 22px; height: 22px; border-radius: 50%; color: #78939d; font-size: 16px; }
 .order-product-editor .remove-product:hover { background: #edf5f6; color: #b0535e; }
