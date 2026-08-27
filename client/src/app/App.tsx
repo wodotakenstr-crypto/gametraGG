@@ -223,7 +223,12 @@ export function App() {
     const interval = window.setInterval(() => { void fetch("/api/water/state").then((response) => response.ok ? response.json() : null).then(applyState).catch(() => undefined); }, 5000);
     return () => window.clearInterval(interval);
   }, []);
-  useEffect(() => () => { if (locationWatch.current !== null) navigator.geolocation?.clearWatch(locationWatch.current); }, []);
+  useEffect(() => {
+    if (activeSection !== "Repartidor" || !navigator.geolocation) return;
+    const updateLocation = (position: GeolocationPosition) => setDriverLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude, updatedAt: new Date().toISOString() });
+    locationWatch.current = navigator.geolocation.watchPosition(updateLocation, undefined, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+    return () => { if (locationWatch.current !== null) { navigator.geolocation.clearWatch(locationWatch.current); locationWatch.current = null; } };
+  }, [activeSection]);
   useEffect(() => {
     if (!sharedLoaded) return;
     const state: SharedWaterState = { orders, clients: clientList, inventory, expenses, driverLocation };
