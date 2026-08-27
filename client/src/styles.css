@@ -100,6 +100,7 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .order-product-editor.added { border-color: #42b98b; background: #f0fbf6; box-shadow: 0 0 0 2px #42b98b26; }
 .order-product-editor.added > div button { width: 48px; background: #42b98b; color: #fff; font-size: 14px; white-space: nowrap; }
 .monthly-close-button { margin-left: 12px; border: 1px solid #b8d8de; border-radius: 7px; background: #eef9fa; color: #147188; padding: 9px 12px; font: 700 11px/1 "Manrope", sans-serif; cursor: pointer; }
+.daily-close-button { margin-left: 12px; border: 1px solid #e2b7a8; border-radius: 7px; background: #fff5f1; color: #ad5c43; padding: 9px 12px; font: 700 11px/1 "Manrope", sans-serif; cursor: pointer; }
 .admin-heading > .outline-button { display: none; }
 .admin-heading { position: relative; }
 .daily-date-button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #d2e3e6; border-radius: 7px; background: #fff; color: #31566a; padding: 9px 12px; font: 700 11px/1 "Manrope", sans-serif; cursor: pointer; }
