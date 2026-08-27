@@ -73,6 +73,7 @@ const initialInventory: InventoryItem[] = [
 const ensureInventoryOnlyProducts = (items: InventoryItem[]) => [...items, ...inventoryOnlyProducts.filter((product) => !items.some((item) => item.id === product.id))];
 
 const depot = { name: "Local De la Roca", address: "Orlando Letelier 9613, Peñalolén", latitude: -33.4796626, longitude: -70.5332919 };
+const sisterHome = { name: "Casa de mi hermana", address: "33°31'47.1\"S 70°46'54.8\"W", latitude: -33.5297546, longitude: -70.7818832 };
 
 const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
 const currentDateLong = () => new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "numeric", month: "long" }).format(new Date()).toUpperCase();
@@ -110,14 +111,15 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
 const comunaCoordinates: Record<string, [number, number]> = { "La Florida": [-33.533, -70.597], Macul: [-33.49, -70.6], "Ñuñoa": [-33.456, -70.598] };
 const mapIcon = (className: string, path: string) => divIcon({ className: "", html: `<span class="live-map-pin ${className}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}" /></svg></span>`, iconSize: [42, 42], iconAnchor: [21, 42] });
 const depotIcon = mapIcon("depot", "m3 10 9-7 9 7v10h-6v-6H9v6H3z");
+const sisterHomeIcon = mapIcon("sister-home", "m3 10 9-7 9 7v10h-6v-6H9v6H3z");
 const driverIcon = mapIcon("driver", "M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6m14 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6M8 14h5l2-4h3m-9 4 2-5h4m-4 0-2-2H7");
 const destinationIcon = mapIcon("destination", "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8m0 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3");
 
 function LiveRouteMap({ driverLocation, nextStop }: { driverLocation: DriverLocation; nextStop?: Order }) {
   const destination = nextStop ? comunaCoordinates[nextStop.comuna] ?? [-33.456, -70.598] : [depot.latitude, depot.longitude] as [number, number];
   const driver = driverLocation ? [driverLocation.latitude, driverLocation.longitude] as [number, number] : [depot.latitude, depot.longitude] as [number, number];
-  const points: [number, number][] = [[depot.latitude, depot.longitude], driver, destination];
-  return <div className="live-route-map"><MapContainer key={points.flat().join("-")} bounds={latLngBounds(points)} boundsOptions={{ padding: [40, 40] }} scrollWheelZoom><TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /><Marker position={[depot.latitude, depot.longitude]} icon={depotIcon}><Popup><b>Local De la Roca</b><br />{depot.address}</Popup></Marker>{driverLocation && <Marker position={driver} icon={driverIcon}><Popup><b>Repartidor en moto</b><br />GPS actualizado</Popup></Marker>}{nextStop && <Marker position={destination} icon={destinationIcon}><Popup><b>{nextStop.client}</b><br />{nextStop.address}, {nextStop.comuna}</Popup></Marker>}</MapContainer></div>;
+  const points: [number, number][] = [[depot.latitude, depot.longitude], [sisterHome.latitude, sisterHome.longitude], driver, destination];
+  return <div className="live-route-map"><MapContainer key={points.flat().join("-")} bounds={latLngBounds(points)} boundsOptions={{ padding: [40, 40] }} scrollWheelZoom><TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /><Marker position={[depot.latitude, depot.longitude]} icon={depotIcon}><Popup><b>Local De la Roca</b><br />{depot.address}</Popup></Marker><Marker position={[sisterHome.latitude, sisterHome.longitude]} icon={sisterHomeIcon}><Popup><b>{sisterHome.name}</b><br />{sisterHome.address}</Popup></Marker>{driverLocation && <Marker position={driver} icon={driverIcon}><Popup><b>Repartidor en moto</b><br />GPS actualizado</Popup></Marker>}{nextStop && <Marker position={destination} icon={destinationIcon}><Popup><b>{nextStop.client}</b><br />{nextStop.address}, {nextStop.comuna}</Popup></Marker>}</MapContainer></div>;
 }
 
 function DeliveryProgress({ order }: { order?: Order }) {
