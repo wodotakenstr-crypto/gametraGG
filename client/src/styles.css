@@ -109,6 +109,10 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .monthly-closures { margin-top: 18px; padding: 18px; border: 1px solid #d8e7ea; border-radius: 10px; background: #f6fbfc; }.monthly-closures h3 { margin: 2px 0 12px; color: #173b54; }.monthly-closures div { display: flex; justify-content: space-between; gap: 15px; padding: 9px 0; border-top: 1px solid #dfecee; color: #496b7b; font-size: 12px; }.monthly-closures span { color: #72909b; }
 .monthly-closures button { margin-left: 10px; border: 1px solid #b8d8de; border-radius: 5px; background: #fff; color: #147188; padding: 5px 8px; font-size: 10px; font-weight: 700; cursor: pointer; }
 .client-actions { display: inline-flex; gap: 10px; margin-left: auto; color: #317d90; font-size: 10px; font-weight: 700; white-space: nowrap; }.client-actions span { cursor: pointer; }.client-actions span:last-child { color: #a55f69; }.client-actions span:hover { text-decoration: underline; }
+.contact-results > button { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto auto; column-gap: 10px; align-items: center; }
+.contact-results > button > span:nth-child(2) { min-width: 0; }
+.contact-results .select-contact, .contact-results .client-actions { margin-left: 0; }
+.contact-results .client-actions { justify-self: end; }
 .order-product-editor > input { width: calc(100% - 24px); min-height: 18px; padding: 0; border: 0; background: transparent; color: #173b54; font: 800 12px/1.3 "Manrope", sans-serif; outline: none; }
 .order-product-editor > input:focus { color: #126f86; }
 .order-product-editor > div { display: grid; grid-template-columns: auto 1fr 32px; align-items: center; gap: 6px; color: #15718b; font-weight: 800; }
