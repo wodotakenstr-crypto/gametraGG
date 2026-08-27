@@ -308,7 +308,7 @@ export function App() {
     document.querySelectorAll<HTMLElement>(".rider-products span, .route-content .order-products span").forEach((item) => { item.style.color = "#000"; item.style.fontWeight = "800"; });
   }, [activeSection, orders]);
 
-  const currentProduct = products.find((item) => item.name === product)!;
+  const currentProduct = products.find((item) => item.name === product) ?? products[0] ?? { name: "", price: 0, stock: 0, unlimited: true };
   const draftTotal = currentProduct.price * quantity;
   const cartTotal = cartItems.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
   const delivered = orders.filter((order) => order.status === "Entregado");
