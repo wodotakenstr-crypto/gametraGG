@@ -74,6 +74,8 @@ const ensureInventoryOnlyProducts = (items: InventoryItem[]) => [...items, ...in
 const depot = { name: "Local De la Roca", address: "Orlando Letelier 9613, Peñalolén", latitude: -33.4796626, longitude: -70.5332919 };
 
 const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
+const currentDateLong = () => new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "numeric", month: "long" }).format(new Date()).toUpperCase();
+const currentDateShort = () => new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", year: "numeric" }).format(new Date()).replace(".", "");
 const loadSaved = <T,>(key: string, fallback: T): T => { try { const saved = localStorage.getItem(key); return saved ? JSON.parse(saved) as T : fallback; } catch { return fallback; } };
 const getOrderItems = (order: Order): OrderItem[] => order.items?.length ? order.items : [{ product: order.product, quantity: order.quantity, unitPrice: order.total / order.quantity }];
 const pagePaths: Record<string, string> = { Resumen: "/", Pedidos: "/pedidos", Clientes: "/clientes", Inventario: "/inventario", Reparto: "/reparto", Repartidor: "/repartidor", Reportes: "/reportes" };
@@ -228,6 +230,12 @@ export function App() {
     const updateLocation = (position: GeolocationPosition) => setDriverLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude, updatedAt: new Date().toISOString() });
     locationWatch.current = navigator.geolocation.watchPosition(updateLocation, undefined, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
     return () => { if (locationWatch.current !== null) { navigator.geolocation.clearWatch(locationWatch.current); locationWatch.current = null; } };
+  }, [activeSection]);
+  useEffect(() => {
+    const headerDate = document.querySelector<HTMLElement>(".date-line");
+    if (headerDate) headerDate.textContent = currentDateLong();
+    const reportButton = document.querySelector<HTMLElement>(".admin-heading .outline-button");
+    if (reportButton) Array.from(reportButton.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE).forEach((node) => { node.textContent = ` ${currentDateShort()} `; });
   }, [activeSection]);
   useEffect(() => {
     if (!sharedLoaded) return;
