@@ -47,7 +47,7 @@ app.put("/api/water/state", async (request, response, next) => {
 
 app.patch("/api/water/location", async (request, response, next) => {
   const { latitude, longitude, updatedAt } = request.body || {};
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return response.status(400).json({ error: "Ubicación inválida." });
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -56 || latitude > -17 || longitude < -76 || longitude > -66) return response.status(400).json({ error: "Solo se aceptan ubicaciones dentro de Chile." });
   try {
     const state = await readState();
     if (!validState(state)) return response.status(404).json({ error: "Estado operativo no inicializado." });

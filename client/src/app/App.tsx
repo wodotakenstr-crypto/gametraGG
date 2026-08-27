@@ -75,6 +75,7 @@ const ensureInventoryOnlyProducts = (items: InventoryItem[]) => [...items, ...in
 
 const depot = { name: "Local De la Roca", address: "Orlando Letelier 9613, Peñalolén", latitude: -33.4796626, longitude: -70.5332919 };
 const sisterHome = { name: "Casa de mi hermana", address: "33°31'47.1\"S 70°46'54.8\"W", latitude: -33.5297546, longitude: -70.7818832 };
+const isChileLocation = (location: DriverLocation) => !location || (location.latitude >= -56 && location.latitude <= -17 && location.longitude >= -76 && location.longitude <= -66);
 
 const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
 const currentDateLong = () => new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "numeric", month: "long" }).format(new Date()).toUpperCase();
@@ -232,7 +233,7 @@ export function App() {
   const [inventory, setInventory] = useState(() => ensureInventoryOnlyProducts(removeDiscontinuedProducts(loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory))));
   const products = inventory.filter((item) => item.category === "Productos" && item.availableForSale !== false).map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0, stock: item.stock, unlimited: isUnlimitedProduct(item.name) }));
   const [newItem, setNewItem] = useState({ name: "", category: "Insumos", stock: "", unit: "unidades", minimum: "" });
-  const [driverLocation, setDriverLocation] = useState<DriverLocation>(() => loadSaved<DriverLocation>("agua-clara-driver-location", null));
+  const [driverLocation, setDriverLocation] = useState<DriverLocation>(() => { const location = loadSaved<DriverLocation>("agua-clara-driver-location", null); return isChileLocation(location) ? location : null; });
   const [sharedLoaded, setSharedLoaded] = useState(false);
   const [deliveryAlerts, setDeliveryAlerts] = useState<DeliveryAlert[]>([]);
   const [showAlerts, setShowAlerts] = useState(false);
@@ -272,7 +273,8 @@ export function App() {
        const cleanedInventory = ensureInventoryOnlyProducts(removeDiscontinuedProducts(state.inventory));
        setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
       setExpenses((current) => JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
-       setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(state.driverLocation) ? current : state.driverLocation);
+       const safeLocation = isChileLocation(state.driverLocation) ? state.driverLocation : null;
+       setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(safeLocation) ? current : safeLocation);
        setMonthlyClosures((current) => JSON.stringify(current) === JSON.stringify(state.monthlyClosures ?? []) ? current : state.monthlyClosures ?? []);
        setDailyArchives((current) => JSON.stringify(current) === JSON.stringify(state.dailyArchives ?? []) ? current : state.dailyArchives ?? []);
        setActiveDate(state.activeDate ?? new Date().toISOString().slice(0, 10));
