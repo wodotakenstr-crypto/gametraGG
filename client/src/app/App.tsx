@@ -27,9 +27,10 @@ type Order = {
 type Client = { name: string; phone: string; address: string; comuna: string };
 type InventoryItem = { id: string; name: string; category: string; stock: number; unit: string; minimum: number; price?: number; availableForSale?: boolean };
 type DriverLocation = { latitude: number; longitude: number; updatedAt: string } | null;
-type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation };
+type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation; monthlyClosures?: MonthlyClosure[] };
 type DeliveryAlert = { id: number; message: string; createdAt: string };
 type ProductOption = { name: string; price: number; stock: number; unlimited: boolean };
+type MonthlyClosure = { id: string; period: string; closedAt: string; orders: Order[]; expenses: { name: string; value: number }[] };
 
 const clients: Client[] = [
   { name: "María José González", phone: "+56 9 8765 4312", address: "Los Castaños 184", comuna: "La Florida" },
@@ -175,6 +176,16 @@ function OrderProductEditors({ products, onAdd, onPriceChange, onNameChange, onC
   return createPortal(<div className="order-product-editors"><button type="button" className="add-specific-product" onClick={() => setCreating((visible) => !visible)}>+ Agregar producto específico</button>{creating && <form className="specific-product-form" onSubmit={(event) => { event.preventDefault(); if (!newName.trim() || newPrice < 0 || newStock < 1) return; onCreate(newName.trim(), newPrice, newStock); setNewName(""); setNewPrice(0); setNewStock(1); setCreating(false); }}><input required placeholder="Nombre del producto" value={newName} onChange={(event) => setNewName(event.target.value)} /><input required type="number" min="0" placeholder="Precio" value={newPrice || ""} onChange={(event) => setNewPrice(Number(event.target.value))} /><input required type="number" min="1" placeholder="Stock" value={newStock} onChange={(event) => setNewStock(Number(event.target.value))} /><button type="submit">Agregar</button></form>}{products.map((item) => <div className="order-product-editor" key={item.name}><button type="button" className="remove-product" aria-label={`Dejar de vender ${item.name}`} onClick={() => onRemove(item.name)}>×</button><input aria-label={`Nombre de ${item.name}`} value={draftNames[item.name] ?? item.name} onChange={(event) => setDraftNames((names) => ({ ...names, [item.name]: event.target.value }))} onBlur={() => onNameChange(item.name, draftNames[item.name] ?? item.name)} /><div><span>$</span><input aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price} onChange={(event) => onPriceChange(item.name, Number(event.target.value))} /><button type="button" aria-label={`Agregar ${item.name}`} disabled={!item.unlimited && item.stock <= 0} onClick={() => onAdd(item)}>+</button></div></div>)}</div>, slot);
 }
 
+function MonthlyCloseControl({ closures, onClose }: { closures: MonthlyClosure[]; onClose: () => void }) {
+  const [header, setHeader] = useState<HTMLElement | null>(null);
+  const [reports, setReports] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => { setHeader(document.querySelector<HTMLElement>(".admin-heading")); setReports(document.querySelector<HTMLElement>(".reports-section")); });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return <>{header && createPortal(<button className="monthly-close-button" type="button" onClick={onClose}>Cerrar mes · día 5</button>, header)}{reports && closures.length > 0 && createPortal(<div className="monthly-closures"><p className="section-kicker">HISTORIAL</p><h3>Cierres mensuales</h3>{closures.map((closure) => <div key={closure.id}><b>{closure.period}</b><span>{closure.orders.length} pedidos · {money(closure.orders.reduce((sum, order) => sum + order.total, 0))}</span></div>)}</div>, reports)}</>;
+}
+
 export function App() {
   const [orders, setOrders] = useState(() => loadSaved<Order[]>("agua-clara-orders", initialOrders));
   const [clientList, setClientList] = useState(() => loadSaved<Client[]>("agua-clara-clients", clients));
@@ -203,12 +214,14 @@ export function App() {
   const [expense, setExpense] = useState(0);
   const [expenseName, setExpenseName] = useState("");
   const [expenses, setExpenses] = useState(() => loadSaved("agua-clara-expenses", [{ name: "Combustible", value: 18000 }, { name: "Estacionamiento", value: 2500 }]));
+  const [monthlyClosures, setMonthlyClosures] = useState<MonthlyClosure[]>(() => loadSaved("agua-clara-monthly-closures", []));
 
   useEffect(() => { localStorage.setItem("agua-clara-orders", JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem("agua-clara-clients", JSON.stringify(clientList)); }, [clientList]);
   useEffect(() => { localStorage.setItem("agua-clara-expenses", JSON.stringify(expenses)); }, [expenses]);
   useEffect(() => { localStorage.setItem("agua-clara-inventory", JSON.stringify(inventory)); }, [inventory]);
   useEffect(() => { localStorage.setItem("agua-clara-driver-location", JSON.stringify(driverLocation)); }, [driverLocation]);
+  useEffect(() => { localStorage.setItem("agua-clara-monthly-closures", JSON.stringify(monthlyClosures)); }, [monthlyClosures]);
   useEffect(() => { const onPopState = () => setActiveSection(pageForPath(window.location.pathname)); window.addEventListener("popstate", onPopState); return () => window.removeEventListener("popstate", onPopState); }, []);
   useEffect(() => {
     const applyState = (state: SharedWaterState | null) => {
@@ -218,7 +231,8 @@ export function App() {
        const cleanedInventory = ensureInventoryOnlyProducts(removeDiscontinuedProducts(state.inventory));
        setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
       setExpenses((current) => JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
-      setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(state.driverLocation) ? current : state.driverLocation);
+       setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(state.driverLocation) ? current : state.driverLocation);
+       setMonthlyClosures((current) => JSON.stringify(current) === JSON.stringify(state.monthlyClosures ?? []) ? current : state.monthlyClosures ?? []);
     };
     const loadState = async () => { try { const response = await fetch("/api/water/state"); if (response.ok) applyState(await response.json() as SharedWaterState | null); } finally { setSharedLoaded(true); } };
     void loadState();
@@ -239,10 +253,10 @@ export function App() {
   }, [activeSection]);
   useEffect(() => {
     if (!sharedLoaded) return;
-    const state: SharedWaterState = { orders, clients: clientList, inventory, expenses, driverLocation };
+     const state: SharedWaterState = { orders, clients: clientList, inventory, expenses, driverLocation, monthlyClosures };
     const timeout = window.setTimeout(() => { void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) }).catch(() => undefined); }, 400);
     return () => window.clearTimeout(timeout);
-  }, [orders, clientList, inventory, expenses, driverLocation, sharedLoaded]);
+   }, [orders, clientList, inventory, expenses, driverLocation, monthlyClosures, sharedLoaded]);
   useEffect(() => {
     const previous = previousOrders.current;
     previousOrders.current = orders;
@@ -297,11 +311,20 @@ export function App() {
     if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
   }
   function expandDriverMap() { void document.querySelector<HTMLElement>(".live-route-map")?.requestFullscreen?.(); }
-  function addExpense(event: FormEvent) {
+   function addExpense(event: FormEvent) {
     event.preventDefault();
     if (!expenseName || expense <= 0) return;
     setExpenses((items) => [...items, { name: expenseName, value: expense }]); setExpenseName(""); setExpense(0);
-  }
+   }
+   function closeMonthlyPeriod() {
+     const now = new Date();
+     const periodDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+     const period = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric" }).format(periodDate);
+     if (monthlyClosures.some((closure) => closure.period === period)) return;
+     if (!window.confirm(`¿Cerrar definitivamente ${period}? Se archivarán sus pedidos y gastos.`)) return;
+     setMonthlyClosures((closures) => [...closures, { id: `${period}-${Date.now()}`, period, closedAt: now.toISOString(), orders, expenses }]);
+     setOrders([]); setExpenses([]); setDriverLocation(null);
+   }
   function addClient(event: FormEvent) {
     event.preventDefault();
     if (!newClient.name.trim() || !newClient.phone.trim() || !newClient.address.trim() || !newClient.comuna.trim()) return;
@@ -386,6 +409,7 @@ export function App() {
      </main>
      {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} />}
      {activeSection === "Pedidos" && <OrderProductEditors products={products} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onCreate={addSpecificProduct} onRemove={removeProductFromSale} />}
+     {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} onClose={closeMonthlyPeriod} />}
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }

@@ -90,6 +90,8 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .specific-product-form button { border: 0; border-radius: 6px; background: #16758a; color: #fff; padding: 0 14px; font: 700 11px/1 "Manrope", sans-serif; cursor: pointer; }
 .order-product-editor { display: grid; gap: 8px; min-height: 76px; padding: 13px 14px; border: 1px solid #d8e7ea; border-radius: 8px; background: #fff; }
 .remove-product { justify-self: end; border: 0; background: transparent; color: #a66b73; font-size: 18px; line-height: 1; cursor: pointer; }
+.monthly-close-button { margin-left: 12px; border: 1px solid #b8d8de; border-radius: 7px; background: #eef9fa; color: #147188; padding: 9px 12px; font: 700 11px/1 "Manrope", sans-serif; cursor: pointer; }
+.monthly-closures { margin-top: 18px; padding: 18px; border: 1px solid #d8e7ea; border-radius: 10px; background: #f6fbfc; }.monthly-closures h3 { margin: 2px 0 12px; color: #173b54; }.monthly-closures div { display: flex; justify-content: space-between; gap: 15px; padding: 9px 0; border-top: 1px solid #dfecee; color: #496b7b; font-size: 12px; }.monthly-closures span { color: #72909b; }
 .order-product-editor > input, .order-product-editor > div input { min-width: 0; border: 0; color: #173b54; font: 700 12px/1.2 "Manrope", sans-serif; outline: none; }
 .order-product-editor > div { display: grid; grid-template-columns: auto 1fr 28px; align-items: center; gap: 3px; color: #15718b; font-weight: 800; }
 .order-product-editor > div input { width: 100%; border-top: 1px solid #e0eaed; padding-top: 5px; }
