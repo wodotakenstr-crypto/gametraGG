@@ -412,6 +412,7 @@ export function App() {
      {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} />}
      {activeSection === "Pedidos" && <OrderProductEditors products={products} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onCreate={addSpecificProduct} onRemove={removeProductFromSale} />}
      {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} onClose={closeMonthlyPeriod} />}
+     {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} /></section>}
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }
