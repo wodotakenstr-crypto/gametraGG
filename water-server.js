@@ -45,6 +45,18 @@ app.put("/api/water/state", async (request, response, next) => {
   try { await writeState(request.body); response.json({ ok: true }); } catch (error) { next(error); }
 });
 
+app.patch("/api/water/location", async (request, response, next) => {
+  const { latitude, longitude, updatedAt } = request.body || {};
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return response.status(400).json({ error: "Ubicación inválida." });
+  try {
+    const state = await readState();
+    if (!validState(state)) return response.status(404).json({ error: "Estado operativo no inicializado." });
+    state.driverLocation = { latitude, longitude, updatedAt: typeof updatedAt === "string" ? updatedAt : new Date().toISOString() };
+    await writeState(state);
+    response.json({ ok: true });
+  } catch (error) { next(error); }
+});
+
 app.use(express.static(buildPath));
 app.get("/{*splat}", (request, response) => response.sendFile(path.join(buildPath, "index.html")));
 app.use((error, request, response, next) => {
