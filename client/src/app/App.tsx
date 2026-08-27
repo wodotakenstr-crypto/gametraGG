@@ -199,6 +199,12 @@ function RiderOrderShortcut({ onOpen }: { onOpen: () => void }) {
   return header ? createPortal(<button className="rider-add-order" type="button" onClick={onOpen}>+ Agregar pedido</button>, header) : null;
 }
 
+function ClientActions({ clients, onEdit, onDelete }: { clients: Client[]; onEdit: (client: Client) => void; onDelete: (client: Client) => void }) {
+  const [rows, setRows] = useState<HTMLElement[]>([]);
+  useEffect(() => { const frame = requestAnimationFrame(() => setRows(Array.from(document.querySelectorAll<HTMLElement>(".contact-results > button")))); return () => cancelAnimationFrame(frame); }, [clients]);
+  return <>{clients.map((client, index) => rows[index] && createPortal(<span className="client-actions" onClick={(event) => event.stopPropagation()}><span role="button" tabIndex={0} onClick={() => onEdit(client)} onKeyDown={(event) => event.key === "Enter" && onEdit(client)}>Editar</span><span role="button" tabIndex={0} onClick={() => onDelete(client)} onKeyDown={(event) => event.key === "Enter" && onDelete(client)}>Eliminar</span></span>, rows[index]))}</>;
+}
+
 export function App() {
   const [orders, setOrders] = useState(() => loadSaved<Order[]>("agua-clara-orders", initialOrders));
   const [clientList, setClientList] = useState(() => loadSaved<Client[]>("agua-clara-clients", clients));
@@ -209,6 +215,7 @@ export function App() {
   const [comuna, setComuna] = useState("");
   const [phone, setPhone] = useState("");
   const [newClient, setNewClient] = useState<Client>({ name: "", phone: "", address: "", comuna: "" });
+  const [editingClientPhone, setEditingClientPhone] = useState<string | null>(null);
   const [clientFilter, setClientFilter] = useState("");
   const [inventory, setInventory] = useState(() => ensureInventoryOnlyProducts(removeDiscontinuedProducts(loadSaved<InventoryItem[]>("agua-clara-inventory", initialInventory))));
   const products = inventory.filter((item) => item.category === "Productos" && item.availableForSale !== false).map((item) => ({ name: item.name, price: item.price ?? defaultProducts.find((product) => product.name === item.name)?.price ?? 0, stock: item.stock, unlimited: isUnlimitedProduct(item.name) }));
@@ -357,15 +364,18 @@ export function App() {
      setDailyArchives((archives) => [...archives, { id: `${date}-${Date.now()}`, date, archivedAt: now.toISOString(), orders, expenses }]);
      setOrders([]); setExpenses([]); setDriverLocation(null); setActiveDate(date);
    }
-  function addClient(event: FormEvent) {
-    event.preventDefault();
-    if (!newClient.name.trim() || !newClient.phone.trim() || !newClient.address.trim() || !newClient.comuna.trim()) return;
-    setClientList((items) => {
-      const withoutSamePhone = items.filter((item) => item.phone !== newClient.phone.trim());
-      return [{ name: newClient.name.trim(), phone: newClient.phone.trim(), address: newClient.address.trim(), comuna: newClient.comuna.trim() }, ...withoutSamePhone];
-    });
-    setNewClient({ name: "", phone: "", address: "", comuna: "" });
-  }
+   function addClient(event: FormEvent) {
+     event.preventDefault();
+     if (!newClient.name.trim() || !newClient.phone.trim() || !newClient.address.trim() || !newClient.comuna.trim()) return;
+     setClientList((items) => {
+       if (editingClientPhone) return items.map((item) => item.phone === editingClientPhone ? { name: newClient.name.trim(), phone: newClient.phone.trim(), address: newClient.address.trim(), comuna: newClient.comuna.trim() } : item);
+       const withoutSamePhone = items.filter((item) => item.phone !== newClient.phone.trim());
+       return [{ name: newClient.name.trim(), phone: newClient.phone.trim(), address: newClient.address.trim(), comuna: newClient.comuna.trim() }, ...withoutSamePhone];
+     });
+     setNewClient({ name: "", phone: "", address: "", comuna: "" }); setEditingClientPhone(null);
+   }
+   function editClient(client: Client) { setNewClient(client); setEditingClientPhone(client.phone); window.scrollTo({ top: 0, behavior: "smooth" }); }
+   function deleteClient(client: Client) { if (!window.confirm(`¿Eliminar a ${client.name} de la agenda?`)) return; setClientList((items) => items.filter((item) => item.phone !== client.phone)); if (editingClientPhone === client.phone) { setEditingClientPhone(null); setNewClient({ name: "", phone: "", address: "", comuna: "" }); } }
   function addInventoryItem(event: FormEvent) {
     event.preventDefault();
     if (!newItem.name.trim() || !newItem.stock || !newItem.minimum) return;
@@ -442,6 +452,7 @@ export function App() {
      {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} />}
      {activeSection === "Pedidos" && <OrderProductEditors products={products} cartItems={cartItems} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onCreate={addSpecificProduct} onRemove={removeProductFromSale} />}
      {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} dailyArchives={dailyArchives} onClose={closeMonthlyPeriod} onDailyClose={closeDailyPeriod} />}
+     {activeSection === "Clientes" && <ClientActions clients={clientList.filter((client) => `${client.name} ${client.phone} ${client.comuna}`.toLowerCase().includes(clientFilter.toLowerCase()))} onEdit={editClient} onDelete={deleteClient} />}
      {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} /></section>}
      {activeSection === "Repartidor" && <RiderOrderShortcut onOpen={() => goTo("Pedidos")} />}
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
