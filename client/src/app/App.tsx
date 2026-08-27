@@ -188,6 +188,12 @@ function MonthlyCloseControl({ closures, onClose }: { closures: MonthlyClosure[]
   return <>{header && createPortal(<button className="monthly-close-button" type="button" onClick={onClose}>Cerrar mes · día 5</button>, header)}{reports && closures.length > 0 && createPortal(<div className="monthly-closures"><p className="section-kicker">HISTORIAL</p><h3>Cierres mensuales</h3>{closures.map((closure) => <div key={closure.id}><b>{closure.period}</b><span>{closure.orders.length} pedidos · {money(closure.orders.reduce((sum, order) => sum + order.total, 0))}</span></div>)}</div>, reports)}</>;
 }
 
+function RiderOrderShortcut({ onOpen }: { onOpen: () => void }) {
+  const [header, setHeader] = useState<HTMLElement | null>(null);
+  useEffect(() => { const frame = requestAnimationFrame(() => setHeader(document.querySelector<HTMLElement>(".rider-page header"))); return () => cancelAnimationFrame(frame); }, []);
+  return header ? createPortal(<button className="rider-add-order" type="button" onClick={onOpen}>+ Agregar pedido</button>, header) : null;
+}
+
 export function App() {
   const [orders, setOrders] = useState(() => loadSaved<Order[]>("agua-clara-orders", initialOrders));
   const [clientList, setClientList] = useState(() => loadSaved<Client[]>("agua-clara-clients", clients));
@@ -413,6 +419,7 @@ export function App() {
      {activeSection === "Pedidos" && <OrderProductEditors products={products} cartItems={cartItems} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onCreate={addSpecificProduct} onRemove={removeProductFromSale} />}
      {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} onClose={closeMonthlyPeriod} />}
      {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} /></section>}
+     {activeSection === "Repartidor" && <RiderOrderShortcut onOpen={() => goTo("Pedidos")} />}
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }
