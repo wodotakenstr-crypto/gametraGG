@@ -111,17 +111,20 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
 }
 
 const comunaCoordinates: Record<string, [number, number]> = { "La Florida": [-33.533, -70.597], Macul: [-33.49, -70.6], "Ñuñoa": [-33.456, -70.598] };
+const routeDistance = (order: Order) => { const [latitude, longitude] = comunaCoordinates[order.comuna] ?? [-33.456, -70.598]; return Math.hypot(latitude - depot.latitude, longitude - depot.longitude); };
 const mapIcon = (className: string, path: string) => divIcon({ className: "", html: `<span class="live-map-pin ${className}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}" /></svg></span>`, iconSize: [42, 42], iconAnchor: [21, 42] });
 const depotIcon = mapIcon("depot", "m3 10 9-7 9 7v10h-6v-6H9v6H3z");
 const sisterHomeIcon = mapIcon("sister-home", "m3 10 9-7 9 7v10h-6v-6H9v6H3z");
 const driverIcon = mapIcon("driver", "M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6m14 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6M8 14h5l2-4h3m-9 4 2-5h4m-4 0-2-2H7");
 const destinationIcon = mapIcon("destination", "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8m0 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3");
 
-function LiveRouteMap({ driverLocation, nextStop }: { driverLocation: DriverLocation; nextStop?: Order }) {
+function LiveRouteMap({ driverLocation, nextStop, stops = [] }: { driverLocation: DriverLocation; nextStop?: Order; stops?: Order[] }) {
   const destination = nextStop ? comunaCoordinates[nextStop.comuna] ?? [-33.456, -70.598] : [depot.latitude, depot.longitude] as [number, number];
   const driver = driverLocation ? [driverLocation.latitude, driverLocation.longitude] as [number, number] : [depot.latitude, depot.longitude] as [number, number];
-  const points: [number, number][] = [[depot.latitude, depot.longitude], [sisterHome.latitude, sisterHome.longitude], driver, destination];
-  return <div className="live-route-map"><MapContainer key={points.flat().join("-")} bounds={latLngBounds(points)} boundsOptions={{ padding: [40, 40] }} scrollWheelZoom><TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /><Marker position={[depot.latitude, depot.longitude]} icon={depotIcon}><Popup><b>Local De la Roca</b><br />{depot.address}</Popup></Marker><Marker position={[sisterHome.latitude, sisterHome.longitude]} icon={sisterHomeIcon}><Popup><b>{sisterHome.name}</b><br />{sisterHome.address}</Popup></Marker>{driverLocation && <Marker position={driver} icon={driverIcon}><Popup><b>Repartidor en moto</b><br />GPS actualizado</Popup></Marker>}{nextStop && <Marker position={destination} icon={destinationIcon}><Popup><b>{nextStop.client}</b><br />{nextStop.address}, {nextStop.comuna}</Popup></Marker>}</MapContainer></div>;
+  const destinations = stops.length ? stops : nextStop ? [nextStop] : [];
+  const destinationPoints = destinations.map((stop) => comunaCoordinates[stop.comuna] ?? [-33.456, -70.598] as [number, number]);
+  const points: [number, number][] = [[depot.latitude, depot.longitude], [sisterHome.latitude, sisterHome.longitude], driver, ...destinationPoints];
+  return <div className="live-route-map"><MapContainer key={points.flat().join("-")} bounds={latLngBounds(points)} boundsOptions={{ padding: [40, 40] }} scrollWheelZoom><TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /><Marker position={[depot.latitude, depot.longitude]} icon={depotIcon}><Popup><b>Local De la Roca</b><br />{depot.address}</Popup></Marker><Marker position={[sisterHome.latitude, sisterHome.longitude]} icon={sisterHomeIcon}><Popup><b>{sisterHome.name}</b><br />{sisterHome.address}</Popup></Marker>{driverLocation && <Marker position={driver} icon={driverIcon}><Popup><b>Repartidor en moto</b><br />GPS actualizado</Popup></Marker>}{destinations.map((stop, index) => <Marker position={destinationPoints[index]} icon={destinationIcon} key={stop.id}><Popup><b>Parada {index + 1} · {stop.client}</b><br />{stop.address}, {stop.comuna}</Popup></Marker>)}</MapContainer></div>;
 }
 
 function DeliveryProgress({ order }: { order?: Order }) {
@@ -329,7 +332,14 @@ export function App() {
   const totals = (method: PaymentMethod) => delivered.filter((order) => order.payment === method).reduce((sum, order) => sum + order.total, 0);
   const salesTotal = delivered.reduce((sum, order) => sum + order.total, 0);
   const expensesTotal = expenses.reduce((sum, item) => sum + item.value, 0);
-  const nextStop = orders.find((order) => order.status !== "Entregado");
+  const routeOrders = orders.filter((order) => order.status !== "Entregado").sort((a, b) => routeDistance(a) - routeDistance(b));
+  const nextStop = routeOrders[0];
+  useEffect(() => {
+    if (activeSection !== "Repartidor") return;
+    const currentOrderIds = orders.filter((order) => order.status !== "Entregado").map((order) => order.id);
+    const containers = [document.querySelector<HTMLElement>(".rider-orders"), document.querySelector<HTMLElement>(".route-list")];
+    containers.forEach((container) => { if (!container) return; const cards = Array.from(container.children); routeOrders.forEach((order) => { const index = currentOrderIds.indexOf(order.id); if (index >= 0 && cards[index]) container.append(cards[index]); }); });
+  }, [activeSection, orders, routeOrders]);
 
   function selectClient(client: Client) { setSelectedClient(client); setClientSearch(client.name); setAddress(client.address); setComuna(client.comuna); setPhone(client.phone); }
   function addOrder(event: FormEvent) {
@@ -449,7 +459,7 @@ export function App() {
           </form>
         </section>}
 
-        {activeSection === "Reparto" && <><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} /><DeliveryProgress order={nextStop} /></>}
+         {activeSection === "Reparto" && <><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} stops={routeOrders} /><DeliveryProgress order={nextStop} /></>}
 
         {activeSection === "Reparto" && <button className="full-map-button" onClick={expandDriverMap}><Icon name="pin" size={16} /> Ver mapa grande</button>}
 
@@ -468,7 +478,7 @@ export function App() {
      {activeSection === "Pedidos" && <OrderProductEditors products={products} cartItems={cartItems} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onCreate={addSpecificProduct} onRemove={removeProductFromSale} onReorder={reorderProducts} />}
      {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} dailyArchives={dailyArchives} onClose={closeMonthlyPeriod} onDailyClose={closeDailyPeriod} />}
      {activeSection === "Clientes" && <ClientActions clients={clientList.filter((client) => `${client.name} ${client.phone} ${client.comuna}`.toLowerCase().includes(clientFilter.toLowerCase()))} onEdit={editClient} onDelete={deleteClient} />}
-     {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} /></section>}
+     {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} stops={routeOrders} /></section>}
      {activeSection === "Repartidor" && <RiderOrderShortcut onOpen={() => goTo("Pedidos")} />}
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
