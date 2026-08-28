@@ -222,6 +222,14 @@ function MobileBackButton({ visible, onBack }: { visible: boolean; onBack: () =>
   return visible && header ? createPortal(<button className="mobile-back-button" type="button" aria-label="Volver a la sección anterior" onClick={onBack}>‹</button>, header) : null;
 }
 
+function MobileSectionMenu({ activeSection, onNavigate }: { activeSection: string; onNavigate: (section: string) => void }) {
+  const [header, setHeader] = useState<HTMLElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const sections = ["Resumen", "Pedidos", "Clientes", "Inventario", "Reparto", "Reportes"];
+  useEffect(() => { const frame = requestAnimationFrame(() => setHeader(document.querySelector<HTMLElement>(".top-header"))); return () => cancelAnimationFrame(frame); }, []);
+  return <>{header && createPortal(<button className="mobile-menu-button" type="button" aria-label="Abrir menú de secciones" onClick={() => setOpen((visible) => !visible)}>☰</button>, header)}{open && createPortal(<div className="mobile-section-menu">{sections.map((section) => <button className={section === activeSection ? "active" : ""} type="button" key={section} onClick={() => { onNavigate(section); setOpen(false); }}>{section}</button>)}</div>, document.body)}</>;
+}
+
 function ClientActions({ clients, onEdit, onDelete }: { clients: Client[]; onEdit: (client: Client) => void; onDelete: (client: Client) => void }) {
   const [rows, setRows] = useState<HTMLElement[]>([]);
   useEffect(() => { const frame = requestAnimationFrame(() => setRows(Array.from(document.querySelectorAll<HTMLElement>(".contact-results > button")))); return () => cancelAnimationFrame(frame); }, [clients]);
@@ -494,6 +502,7 @@ export function App() {
      {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} stops={routeOrders} /></section>}
      {activeSection === "Repartidor" && <RiderOrderShortcut onOpen={() => goTo("Pedidos")} />}
      <MobileBackButton visible={activeSection !== "Resumen"} onBack={() => window.history.length > 1 ? window.history.back() : goTo("Resumen")} />
+     <MobileSectionMenu activeSection={activeSection} onNavigate={goTo} />
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }
