@@ -128,4 +128,6 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .daily-report-table div { grid-template-columns: minmax(170px, 1.15fr) minmax(190px, 1.5fr) minmax(150px, auto); gap: 24px; align-items: center; padding: 13px 0; }
 .daily-report-table em { text-align: right; }
 .daily-download + .daily-download { margin-left: 8px; }
+.mobile-back-button { display: none; }
 @media (max-width: 760px) { .daily-report-modal > div { padding: 24px 18px; }.daily-report-table div { grid-template-columns: 1fr; gap: 5px; }.daily-report-table em { text-align: left; } }
+@media (max-width: 760px) { .mobile-back-button { display: grid; place-items: center; width: 32px; height: 32px; margin-right: 8px; border: 1px solid #d5e5e8; border-radius: 8px; background: #fff; color: #176d82; font-size: 28px; line-height: 26px; cursor: pointer; } }

@@ -216,6 +216,12 @@ function RiderOrderShortcut({ onOpen }: { onOpen: () => void }) {
   return header ? createPortal(<button className="rider-add-order" type="button" onClick={onOpen}>+ Agregar pedido</button>, header) : null;
 }
 
+function MobileBackButton({ visible, onBack }: { visible: boolean; onBack: () => void }) {
+  const [header, setHeader] = useState<HTMLElement | null>(null);
+  useEffect(() => { const frame = requestAnimationFrame(() => setHeader(document.querySelector<HTMLElement>(".top-header"))); return () => cancelAnimationFrame(frame); }, []);
+  return visible && header ? createPortal(<button className="mobile-back-button" type="button" aria-label="Volver a la sección anterior" onClick={onBack}>‹</button>, header) : null;
+}
+
 function ClientActions({ clients, onEdit, onDelete }: { clients: Client[]; onEdit: (client: Client) => void; onDelete: (client: Client) => void }) {
   const [rows, setRows] = useState<HTMLElement[]>([]);
   useEffect(() => { const frame = requestAnimationFrame(() => setRows(Array.from(document.querySelectorAll<HTMLElement>(".contact-results > button")))); return () => cancelAnimationFrame(frame); }, [clients]);
@@ -297,6 +303,12 @@ export function App() {
   useEffect(() => {
     const headerDate = document.querySelector<HTMLElement>(".date-line");
     if (headerDate) headerDate.textContent = currentDateLong();
+    const greeting = document.querySelector<HTMLElement>(".top-header h1");
+    if (greeting && activeSection === "Resumen") greeting.textContent = "Buenos días, Roxana";
+    const profileName = document.querySelector<HTMLElement>(".user-card strong");
+    if (profileName) profileName.textContent = "Roxana Rubino";
+    const profileAvatar = document.querySelector<HTMLElement>(".user-card .avatar");
+    if (profileAvatar) profileAvatar.textContent = "RR";
     const reportButton = document.querySelector<HTMLElement>(".admin-heading .outline-button");
     if (reportButton) Array.from(reportButton.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE).forEach((node) => { node.textContent = ` ${currentDateShort()} `; });
   }, [activeSection]);
@@ -481,6 +493,7 @@ export function App() {
      {activeSection === "Clientes" && <ClientActions clients={clientList.filter((client) => `${client.name} ${client.phone} ${client.comuna}`.toLowerCase().includes(clientFilter.toLowerCase()))} onEdit={editClient} onDelete={deleteClient} />}
      {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} stops={routeOrders} /></section>}
      {activeSection === "Repartidor" && <RiderOrderShortcut onOpen={() => goTo("Pedidos")} />}
+     <MobileBackButton visible={activeSection !== "Resumen"} onBack={() => window.history.length > 1 ? window.history.back() : goTo("Resumen")} />
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
   </div>;
 }
