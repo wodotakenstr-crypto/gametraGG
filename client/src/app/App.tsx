@@ -73,7 +73,8 @@ const initialInventory: InventoryItem[] = [
   ...inventoryOnlyProducts,
 ];
 const restoredProductIds = new Set(["bidon-20-litros", "bidon-10-litros"]);
-const ensureInventoryOnlyProducts = (items: InventoryItem[]) => [...items.map((item) => restoredProductIds.has(item.id) ? { ...item, availableForSale: true } : item), ...inventoryOnlyProducts.filter((product) => !items.some((item) => item.id === product.id))];
+const inventoryOnlyById = new Map(inventoryOnlyProducts.map((product) => [product.id, product]));
+const ensureInventoryOnlyProducts = (items: InventoryItem[]) => [...items.map((item) => { const canonical = inventoryOnlyById.get(item.id); return canonical ? { ...item, name: canonical.name, category: canonical.category, unit: canonical.unit, ...(restoredProductIds.has(item.id) ? { availableForSale: true } : {}) } : item; }), ...inventoryOnlyProducts.filter((product) => !items.some((item) => item.id === product.id))];
 
 const depot = { name: "Local De la Roca", address: "Orlando Letelier 9613, Peñalolén", latitude: -33.4796626, longitude: -70.5332919 };
 const sisterHome = { name: "Casa de mi hermana", address: "33°31'47.1\"S 70°46'54.8\"W", latitude: -33.5297546, longitude: -70.7818832 };
