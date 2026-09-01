@@ -157,35 +157,17 @@ function RiderPaymentsInCards({ orders, onChange }: { orders: Order[]; onChange:
   return <>{pending.map((order, index) => cards[index] && createPortal(<div className="rider-payment" key={order.id}><b>Método de cobro</b><select aria-label={`Método de pago de ${order.client}`} value={order.payment} onChange={(event) => onChange(order.id, event.target.value as PaymentMethod)}><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></div>, cards[index]))}</>;
 }
 
-function InventoryEditors({ inventory, onChange }: { inventory: InventoryItem[]; onChange: (id: string, stock: number) => void }) {
+function InventoryEditors({ inventory, onChange, onPriceChange, onDelete }: { inventory: InventoryItem[]; onChange: (id: string, stock: number) => void; onPriceChange: (id: string, price: number) => void; onDelete: (item: InventoryItem) => void }) {
   const [slots, setSlots] = useState<HTMLElement[]>([]);
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setSlots(Array.from(document.querySelectorAll<HTMLElement>(".inventory-list article")).filter((_, index) => !isUnlimitedProduct(inventory[index]?.name ?? "")).map((card) => {
+    const frame = requestAnimationFrame(() => setSlots(Array.from(document.querySelectorAll<HTMLElement>(".inventory-list article")).map((card) => {
       let slot = card.querySelector<HTMLElement>(".inventory-editor-slot");
       if (!slot) { slot = document.createElement("div"); slot.className = "inventory-editor-slot"; card.querySelector(".inventory-quantity")?.replaceWith(slot); }
       return slot;
     })));
     return () => cancelAnimationFrame(frame);
   }, [inventory]);
-  return <>{inventory.filter((item) => !isUnlimitedProduct(item.name)).map((item, index) => slots[index] && createPortal(<input className="inventory-stock-input" aria-label={`Cantidad de ${item.name}`} type="number" min="0" value={item.stock} onChange={(event) => onChange(item.id, Number(event.target.value))} />, slots[index], item.id))}</>;
-}
-
-function InventoryDeleteEditors({ inventory, onDelete }: { inventory: InventoryItem[]; onDelete: (item: InventoryItem) => void }) {
-  const [slots, setSlots] = useState<HTMLElement[]>([]);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setSlots(Array.from(document.querySelectorAll<HTMLElement>(".inventory-list article"))));
-    return () => cancelAnimationFrame(frame);
-  }, [inventory]);
-  return <>{inventory.map((item, index) => slots[index] && createPortal(<button type="button" className="inventory-delete" aria-label={`Eliminar ${item.name}`} onClick={() => onDelete(item)}>×</button>, slots[index], item.id))}</>;
-}
-
-function InventoryPriceEditors({ inventory, onChange }: { inventory: InventoryItem[]; onChange: (id: string, price: number) => void }) {
-  const [slots, setSlots] = useState<HTMLElement[]>([]);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setSlots(Array.from(document.querySelectorAll<HTMLElement>(".inventory-list article"))));
-    return () => cancelAnimationFrame(frame);
-  }, [inventory]);
-  return <>{inventory.map((item, index) => slots[index] && createPortal(<input className="inventory-price-input" aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price ?? 0} onChange={(event) => onChange(item.id, Number(event.target.value))} />, slots[index], item.id))}</>;
+  return <>{inventory.map((item, index) => slots[index] && createPortal(<div className="inventory-controls"><label>Precio<input className="inventory-price-input" aria-label={`Precio de ${item.name}`} type="number" min="0" value={item.price ?? 0} onChange={(event) => onPriceChange(item.id, Number(event.target.value))} /></label>{isUnlimitedProduct(item.name) ? <span className="inventory-unlimited">Stock ilimitado</span> : <label>Stock<input className="inventory-stock-input" aria-label={`Cantidad de ${item.name}`} type="number" min="0" value={item.stock} onChange={(event) => onChange(item.id, Number(event.target.value))} /></label>}<button type="button" className="inventory-delete" aria-label={`Eliminar ${item.name}`} onClick={() => onDelete(item)}>Eliminar</button></div>, slots[index], item.id))}</>;
 }
 
 function OrderProductEditors({ products, cartItems, onAdd, onPriceChange, onNameChange, onRemove, onReorder }: { products: ProductOption[]; cartItems: OrderItem[]; onAdd: (product: ProductOption) => void; onPriceChange: (name: string, price: number) => void; onNameChange: (name: string, nextName: string) => void; onRemove: (name: string) => void; onReorder: (from: string, to: string) => void }) {
@@ -510,9 +492,7 @@ export function App() {
       </section>
       <section className="reports-section"><div><p className="section-kicker">REPORTES</p><h2>Resumen de operación</h2><p>Controla el estado de los pedidos y la forma de pago del día.</p></div><div className="report-grid"><article><small>PEDIDOS NUEVOS</small><strong>{orders.filter((order) => order.status === "Nuevo").length}</strong></article><article><small>EN RUTA</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong></article><article><small>ENTREGADOS</small><strong>{delivered.length}</strong></article><article><small>TICKET PROMEDIO</small><strong>{money(orders.length ? orders.reduce((total, order) => total + order.total, 0) / orders.length : 0)}</strong></article></div></section></>}
      </main>
-      {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} />}
-      {activeSection === "Inventario" && <InventoryDeleteEditors inventory={inventory} onDelete={deleteInventoryItem} />}
-      {activeSection === "Inventario" && <InventoryPriceEditors inventory={inventory} onChange={updateProductPrice} />}
+       {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} onPriceChange={updateProductPrice} onDelete={deleteInventoryItem} />}
       {activeSection === "Pedidos" && <OrderProductEditors products={products} cartItems={cartItems} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onRemove={removeProductFromSale} onReorder={reorderProducts} />}
      {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} dailyArchives={dailyArchives} onClose={closeMonthlyPeriod} onDailyClose={closeDailyPeriod} />}
      {activeSection === "Clientes" && <ClientActions clients={clientList.filter((client) => `${client.name} ${client.phone} ${client.comuna}`.toLowerCase().includes(clientFilter.toLowerCase()))} onEdit={editClient} onDelete={deleteClient} />}
