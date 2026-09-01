@@ -248,6 +248,13 @@ function RiderOrderShortcut({ onOpen }: { onOpen: () => void }) {
   return header ? createPortal(<button className="rider-add-order" type="button" onClick={onOpen}>+ Agregar pedido</button>, header) : null;
 }
 
+function RiderNavigationShortcuts() {
+  const [header, setHeader] = useState<HTMLElement | null>(null);
+  useEffect(() => { const frame = requestAnimationFrame(() => setHeader(document.querySelector<HTMLElement>(".rider-page header"))); return () => cancelAnimationFrame(frame); }, []);
+  const wazeUrl = (latitude: number, longitude: number) => `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`;
+  return header ? createPortal(<div className="rider-navigation-shortcuts"><a href={wazeUrl(depot.latitude, depot.longitude)} target="_blank" rel="noreferrer"><Icon name="home" size={18} /> Ir a empresa</a><a href={wazeUrl(sisterHome.latitude, sisterHome.longitude)} target="_blank" rel="noreferrer"><Icon name="pin" size={18} /> Ir a casa</a></div>, header) : null;
+}
+
 function MobileBackButton({ visible, onBack }: { visible: boolean; onBack: () => void }) {
   const [header, setHeader] = useState<HTMLElement | null>(null);
   useEffect(() => { const frame = requestAnimationFrame(() => setHeader(document.querySelector<HTMLElement>(".top-header"))); return () => cancelAnimationFrame(frame); }, []);
@@ -532,7 +539,8 @@ export function App() {
       {activeSection === "Reportes" && <AddArchivedOrder archives={dailyArchives} clients={clientList} inventory={inventory} onUpdate={updateDailyArchive} />}
      {activeSection === "Clientes" && <ClientActions clients={clientList.filter((client) => `${client.name} ${client.phone} ${client.comuna}`.toLowerCase().includes(clientFilter.toLowerCase()))} onEdit={editClient} onDelete={deleteClient} />}
      {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} stops={routeOrders} /></section>}
-     {activeSection === "Repartidor" && <RiderOrderShortcut onOpen={() => goTo("Pedidos")} />}
+      {activeSection === "Repartidor" && <RiderOrderShortcut onOpen={() => goTo("Pedidos")} />}
+      {activeSection === "Repartidor" && <RiderNavigationShortcuts />}
      <MobileBackButton visible={activeSection !== "Resumen"} onBack={() => window.history.length > 1 ? window.history.back() : goTo("Resumen")} />
      <MobileSectionMenu activeSection={activeSection} onNavigate={goTo} />
      {activeSection === "Repartidor" && <RiderPaymentsInCards orders={orders} onChange={updateOrderPayment} />}
