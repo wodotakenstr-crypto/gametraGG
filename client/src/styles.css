@@ -143,3 +143,5 @@ button, input, select, textarea { font: inherit; } button { cursor: pointer; }
 .inventory-item { display: flex; }.inventory-item > div:nth-of-type(1) { flex: 1 1 auto; min-width: 0; }.inventory-editor-slot { flex: 0 0 326px; }.inventory-stock-placeholder { flex: 0 0 68px; height: 24px; }.inventory-controls > label { flex: 0 0 68px; }.inventory-control-buttons { margin-left: 0; }
 @media (max-width: 760px) { .inventory-item { display: grid; }.inventory-editor-slot { flex: 1 1 auto; } }
 .inventory-item > div:nth-of-type(1) { overflow: hidden; }.inventory-item h3 { max-width: 360px; overflow-wrap: anywhere; line-height: 1.25; }
+.inventory-item { display: grid; grid-template-columns: 38px minmax(0, 1fr) 326px; }.inventory-editor-slot { grid-column: 3; width: 326px; }.inventory-item > div:nth-of-type(1) { min-width: 0; }.inventory-controls { justify-content: flex-start; }
+@media (max-width: 760px) { .inventory-item { grid-template-columns: 36px minmax(0, 1fr); }.inventory-editor-slot { grid-column: 2 / -1; width: 100%; }.inventory-controls { justify-content: flex-start; } }
