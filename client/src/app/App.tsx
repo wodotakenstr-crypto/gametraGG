@@ -282,12 +282,7 @@ export function App() {
   useEffect(() => {
      const applyState = (state: SharedWaterState | null) => {
        if (!state) return;
-       const today = new Date().toISOString().slice(0, 10);
-       if (state.activeDate && state.activeDate !== today && (state.orders.length > 0 || state.expenses.length > 0)) {
-         const archive = { id: `${state.activeDate}-${Date.now()}`, date: state.activeDate, archivedAt: new Date().toISOString(), orders: state.orders, expenses: state.expenses };
-         state = { ...state, orders: [], expenses: [], driverLocation: null, activeDate: today, dailyArchives: [...(state.dailyArchives ?? []), archive] };
-       }
-       setOrders((current) => JSON.stringify(current) === JSON.stringify(state.orders) ? current : state.orders);
+        setOrders((current) => JSON.stringify(current) === JSON.stringify(state.orders) ? current : state.orders);
       setClientList((current) => JSON.stringify(current) === JSON.stringify(state.clients) ? current : state.clients);
        const cleanedInventory = ensureInventoryOnlyProducts(removeDiscontinuedProducts(state.inventory));
        setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
