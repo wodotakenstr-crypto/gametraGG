@@ -61,6 +61,7 @@ const inventoryOnlyProducts: InventoryItem[] = [
   { id: "dispensador-sobremesa-basico", name: "Dispensador sobremesa agua fría, caliente básico", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 45000 },
   { id: "dispensador-sobremesa-tres-temperaturas", name: "Dispensador sobremesa agua fría, caliente y temperatura ambiente", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 75000 },
   { id: "dispensador-manual", name: "Dispensador manual", category: "Productos", stock: 0, unit: "unidades", minimum: 0, price: 3000 },
+  { id: "sellos-seguridad", name: "Sellos de seguridad", category: "Insumos", stock: 1000, unit: "unidades", minimum: 100, price: 0 },
 ];
 
 const initialOrders: Order[] = [];
@@ -83,6 +84,7 @@ const currentDateLong = () => new Intl.DateTimeFormat("es-CL", { weekday: "long"
 const currentDateShort = () => new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", year: "numeric" }).format(new Date()).replace(".", "");
 const loadSaved = <T,>(key: string, fallback: T): T => { try { const saved = localStorage.getItem(key); return saved ? JSON.parse(saved) as T : fallback; } catch { return fallback; } };
 const getOrderItems = (order: Order): OrderItem[] => order.items?.length ? order.items : [{ product: order.product, quantity: order.quantity, unitPrice: order.total / order.quantity }];
+const isRefillProduct = (name: string) => name.trim().toLocaleLowerCase("es-CL").startsWith("recarga");
 const pagePaths: Record<string, string> = { Resumen: "/", Pedidos: "/pedidos", Clientes: "/clientes", Inventario: "/inventario", Reparto: "/reparto", Repartidor: "/repartidor", Reportes: "/reportes" };
 const pageForPath = (path: string) => Object.entries(pagePaths).find(([, value]) => value === path)?.[0] ?? "Resumen";
 
@@ -437,7 +439,7 @@ export function App() {
   function advanceOrder(id: number) {
     const order = orders.find((item) => item.id === id);
     if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
-     if (order?.status === "En ruta") setInventory((stock) => stock.map((item) => { const deliveredItem = getOrderItems(order).find((orderItem) => orderItem.product === item.name); return deliveredItem && !isUnlimitedProduct(item.name) ? { ...item, stock: Math.max(0, item.stock - deliveredItem.quantity) } : item; }));
+     if (order?.status === "En ruta") { const orderItems = getOrderItems(order); const sealUsage = orderItems.filter((item) => isRefillProduct(item.product)).reduce((total, item) => total + item.quantity, 0); setInventory((stock) => stock.map((item) => { if (item.name === "Sellos de seguridad") return { ...item, stock: Math.max(0, item.stock - sealUsage) }; const deliveredItem = orderItems.find((orderItem) => orderItem.product === item.name); return deliveredItem && !isUnlimitedProduct(item.name) ? { ...item, stock: Math.max(0, item.stock - deliveredItem.quantity) } : item; })); }
     setOrders((items) => items.map((order) => order.id !== id ? order : { ...order, status: order.status === "Nuevo" ? "En ruta" : order.status === "En ruta" ? "Entregado" : "Entregado" }));
   }
   function updateOrderPayment(id: number, payment: PaymentMethod) { setOrders((items) => items.map((order) => order.id === id ? { ...order, payment } : order)); }
