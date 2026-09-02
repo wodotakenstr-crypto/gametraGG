@@ -22,6 +22,7 @@ type Order = {
   time: string;
   note?: string;
   items?: OrderItem[];
+  createdAt?: string;
 };
 
 type Client = { name: string; phone: string; address: string; comuna: string };
@@ -277,7 +278,8 @@ function ClientActions({ clients, onEdit, onDelete }: { clients: Client[]; onEdi
 
 export function App() {
   const locallyClosedDay = loadSaved<string | null>("agua-clara-closed-day", null);
-  const [orders, setOrders] = useState(() => loadSaved<Order[]>("agua-clara-orders", initialOrders));
+  const locallyClosedAt = loadSaved<string | undefined>("agua-clara-day-reset-at", undefined);
+  const [orders, setOrders] = useState(() => { const saved = loadSaved<Order[]>("agua-clara-orders", initialOrders); return locallyClosedAt ? saved.filter((order) => order.createdAt && order.createdAt > locallyClosedAt) : saved; });
   const [clientList, setClientList] = useState(() => loadSaved<Client[]>("agua-clara-clients", clients));
   const [activeSection, setActiveSection] = useState(() => pageForPath(window.location.pathname));
   const [clientSearch, setClientSearch] = useState("");
@@ -413,7 +415,7 @@ export function App() {
     const items = cartItems.length ? cartItems : [{ product, quantity, unitPrice: currentProduct.price }];
     const total = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     if (!clientList.some((item) => item.phone === client.phone)) setClientList((items) => [client, ...items]);
-     setOrders((previous) => [{ id: Math.max(0, ...previous.map((order) => order.id)) + 1, client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note }, ...previous]);
+     setOrders((previous) => [{ id: Math.max(0, ...previous.map((order) => order.id)) + 1, client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note, createdAt: new Date().toISOString() }, ...previous]);
     setNote(""); setQuantity(1); setCartItems([]); setClientSearch(""); setSelectedClient(null); setAddress(""); setComuna(""); setPhone("");
   }
    function addProductToCart(itemToAdd: ProductOption = currentProduct, amount = quantity) { const inventoryItem = inventory.find((item) => item.name === itemToAdd.name); const existingQuantity = cartItems.find((item) => item.product === itemToAdd.name)?.quantity ?? 0; if (inventoryItem && !isUnlimitedProduct(inventoryItem.name) && existingQuantity + amount > inventoryItem.stock) return; setCartItems((items) => { const existing = items.find((item) => item.product === itemToAdd.name); return existing ? items.map((item) => item.product === itemToAdd.name ? { ...item, quantity: item.quantity + amount } : item) : [...items, { product: itemToAdd.name, quantity: amount, unitPrice: itemToAdd.price }]; }); setQuantity(1); }
@@ -454,7 +456,7 @@ export function App() {
       const resetAt = now.toISOString();
       const clearedState: SharedWaterState = { orders: [], clients: clientList, inventory, expenses: [], driverLocation: null, monthlyClosures, dailyArchives: nextArchives, activeDate: date, dayResetAt: resetAt };
       void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clearedState) }).catch(() => undefined);
-      localStorage.setItem("agua-clara-closed-day", date); closedDayRef.current = date; setDayResetAt(resetAt);
+      localStorage.setItem("agua-clara-closed-day", date); localStorage.setItem("agua-clara-day-reset-at", resetAt); closedDayRef.current = date; setDayResetAt(resetAt);
       setDailyArchives(nextArchives);
       ignoreRemoteDayDataUntil.current = Date.now() + 5000; setOrders([]); setExpenses([]); setDriverLocation(null); setActiveDate(date);
     }
