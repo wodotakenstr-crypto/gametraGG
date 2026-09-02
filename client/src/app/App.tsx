@@ -388,6 +388,7 @@ export function App() {
   const totals = (method: PaymentMethod) => delivered.filter((order) => order.payment === method).reduce((sum, order) => sum + order.total, 0);
   const salesTotal = delivered.reduce((sum, order) => sum + order.total, 0);
   const expensesTotal = expenses.reduce((sum, item) => sum + item.value, 0);
+  useEffect(() => { if (activeSection !== "Reportes") return; const card = document.querySelector<HTMLElement>(".total-card"); if (!card) return; const label = card.querySelector("small"); const value = card.querySelector("strong"); const detail = card.querySelector("p"); if (label) label.textContent = "TOTAL NETO"; if (value) value.textContent = money(salesTotal - expensesTotal); if (detail) detail.textContent = "Ventas menos gastos"; }, [activeSection, salesTotal, expensesTotal]);
   const routeOrders = orders.filter((order) => order.status !== "Entregado").sort((a, b) => routeDistance(a) - routeDistance(b));
   const nextStop = routeOrders[0];
   useEffect(() => {
