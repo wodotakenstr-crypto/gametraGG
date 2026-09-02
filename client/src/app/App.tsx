@@ -27,7 +27,7 @@ type Order = {
 type Client = { name: string; phone: string; address: string; comuna: string };
 type InventoryItem = { id: string; name: string; category: string; stock: number; unit: string; minimum: number; price?: number; availableForSale?: boolean };
 type DriverLocation = { latitude: number; longitude: number; updatedAt: string } | null;
-type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation; monthlyClosures?: MonthlyClosure[]; dailyArchives?: DailyArchive[]; activeDate?: string };
+type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation; monthlyClosures?: MonthlyClosure[]; dailyArchives?: DailyArchive[]; activeDate?: string; dayResetAt?: string };
 type DeliveryAlert = { id: number; message: string; createdAt: string };
 type ProductOption = { name: string; price: number; stock: number; unlimited: boolean };
 type MonthlyClosure = { id: string; period: string; closedAt: string; orders: Order[]; expenses: { name: string; value: number }[] };
@@ -310,6 +310,7 @@ export function App() {
   const [monthlyClosures, setMonthlyClosures] = useState<MonthlyClosure[]>(() => loadSaved("agua-clara-monthly-closures", []));
   const [dailyArchives, setDailyArchives] = useState<DailyArchive[]>(() => loadSaved("agua-clara-daily-archives", []));
   const [activeDate, setActiveDate] = useState(() => loadSaved("agua-clara-active-date", new Date().toISOString().slice(0, 10)));
+  const [dayResetAt, setDayResetAt] = useState<string | undefined>(() => loadSaved("agua-clara-day-reset-at", undefined));
 
   useEffect(() => { localStorage.setItem("agua-clara-orders", JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem("agua-clara-clients", JSON.stringify(clientList)); }, [clientList]);
@@ -319,6 +320,7 @@ export function App() {
   useEffect(() => { localStorage.setItem("agua-clara-monthly-closures", JSON.stringify(monthlyClosures)); }, [monthlyClosures]);
   useEffect(() => { localStorage.setItem("agua-clara-daily-archives", JSON.stringify(dailyArchives)); }, [dailyArchives]);
   useEffect(() => { localStorage.setItem("agua-clara-active-date", activeDate); }, [activeDate]);
+  useEffect(() => { if (dayResetAt) localStorage.setItem("agua-clara-day-reset-at", dayResetAt); }, [dayResetAt]);
   useEffect(() => { const onPopState = () => setActiveSection(pageForPath(window.location.pathname)); window.addEventListener("popstate", onPopState); return () => window.removeEventListener("popstate", onPopState); }, []);
   useEffect(() => {
      const applyState = (state: SharedWaterState | null) => {
@@ -332,7 +334,8 @@ export function App() {
        setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(safeLocation) ? current : safeLocation);
        setMonthlyClosures((current) => JSON.stringify(current) === JSON.stringify(state.monthlyClosures ?? []) ? current : state.monthlyClosures ?? []);
        setDailyArchives((current) => JSON.stringify(current) === JSON.stringify(state.dailyArchives ?? []) ? current : state.dailyArchives ?? []);
-       setActiveDate(state.activeDate ?? new Date().toISOString().slice(0, 10));
+        setActiveDate(state.activeDate ?? new Date().toISOString().slice(0, 10));
+        setDayResetAt(state.dayResetAt);
     };
     const loadState = async () => { try { const response = await fetch("/api/water/state"); if (response.ok) applyState(await response.json() as SharedWaterState | null); } finally { setSharedLoaded(true); } };
     void loadState();
@@ -359,10 +362,10 @@ export function App() {
   }, [activeSection]);
   useEffect(() => {
     if (!sharedLoaded) return;
-     const state: SharedWaterState = { orders, clients: clientList, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, activeDate };
+     const state: SharedWaterState = { orders, clients: clientList, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, activeDate, dayResetAt };
     const timeout = window.setTimeout(() => { void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) }).catch(() => undefined); }, 400);
     return () => window.clearTimeout(timeout);
-   }, [orders, clientList, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, activeDate, sharedLoaded]);
+    }, [orders, clientList, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, activeDate, dayResetAt, sharedLoaded]);
   useEffect(() => {
     const previous = previousOrders.current;
     previousOrders.current = orders;
@@ -446,9 +449,10 @@ export function App() {
       if (!window.confirm(`¿Guardar y limpiar el reporte del ${date}?`)) return;
       const archive = { id: `${date}-${Date.now()}`, date, archivedAt: now.toISOString(), orders, expenses };
       const nextArchives = [...dailyArchives, archive];
-      const clearedState: SharedWaterState = { orders: [], clients: clientList, inventory, expenses: [], driverLocation: null, monthlyClosures, dailyArchives: nextArchives, activeDate: date };
+      const resetAt = now.toISOString();
+      const clearedState: SharedWaterState = { orders: [], clients: clientList, inventory, expenses: [], driverLocation: null, monthlyClosures, dailyArchives: nextArchives, activeDate: date, dayResetAt: resetAt };
       void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clearedState) }).catch(() => undefined);
-      localStorage.setItem("agua-clara-closed-day", date); closedDayRef.current = date;
+      localStorage.setItem("agua-clara-closed-day", date); closedDayRef.current = date; setDayResetAt(resetAt);
       setDailyArchives(nextArchives);
       ignoreRemoteDayDataUntil.current = Date.now() + 5000; setOrders([]); setExpenses([]); setDriverLocation(null); setActiveDate(date);
     }
