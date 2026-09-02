@@ -320,8 +320,8 @@ export function App() {
   useEffect(() => {
      const applyState = (state: SharedWaterState | null) => {
        if (!state) return;
-        setOrders((current) => JSON.stringify(current) === JSON.stringify(state.orders) ? current : state.orders);
-      setClientList((current) => JSON.stringify(current) === JSON.stringify(state.clients) ? current : state.clients);
+         setOrders((current) => { const serverIds = new Set(state.orders.map((order) => order.id)); const localOnly = current.filter((order) => !serverIds.has(order.id)); const next = [...state.orders, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
+       setClientList((current) => { const serverPhones = new Set(state.clients.map((client) => client.phone)); const localOnly = current.filter((client) => !serverPhones.has(client.phone)); const next = [...state.clients, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        const cleanedInventory = ensureInventoryOnlyProducts(removeDiscontinuedProducts(state.inventory));
        setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
       setExpenses((current) => JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
@@ -404,7 +404,7 @@ export function App() {
     const items = cartItems.length ? cartItems : [{ product, quantity, unitPrice: currentProduct.price }];
     const total = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     if (!clientList.some((item) => item.phone === client.phone)) setClientList((items) => [client, ...items]);
-    setOrders((previous) => [{ id: Math.max(...previous.map((order) => order.id)) + 1, client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note }, ...previous]);
+     setOrders((previous) => [{ id: Math.max(0, ...previous.map((order) => order.id)) + 1, client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note }, ...previous]);
     setNote(""); setQuantity(1); setCartItems([]); setClientSearch(""); setSelectedClient(null); setAddress(""); setComuna(""); setPhone("");
   }
    function addProductToCart(itemToAdd: ProductOption = currentProduct, amount = quantity) { const inventoryItem = inventory.find((item) => item.name === itemToAdd.name); const existingQuantity = cartItems.find((item) => item.product === itemToAdd.name)?.quantity ?? 0; if (inventoryItem && !isUnlimitedProduct(inventoryItem.name) && existingQuantity + amount > inventoryItem.stock) return; setCartItems((items) => { const existing = items.find((item) => item.product === itemToAdd.name); return existing ? items.map((item) => item.product === itemToAdd.name ? { ...item, quantity: item.quantity + amount } : item) : [...items, { product: itemToAdd.name, quantity: amount, unitPrice: itemToAdd.price }]; }); setQuantity(1); }
