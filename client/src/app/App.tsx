@@ -414,8 +414,14 @@ export function App() {
     const client = { name: clientSearch.trim(), phone: phone.trim(), address: address.trim(), comuna: comuna.trim() };
     const items = cartItems.length ? cartItems : [{ product, quantity, unitPrice: currentProduct.price }];
     const total = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-    if (!clientList.some((item) => item.phone === client.phone)) setClientList((items) => [client, ...items]);
-     setOrders((previous) => [{ id: Date.now(), client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note, createdAt: new Date().toISOString() }, ...previous]);
+     const createdAt = new Date().toISOString();
+     const newOrder: Order = { id: Date.now(), client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note, createdAt };
+     const nextClients = clientList.some((item) => item.phone === client.phone) ? clientList : [client, ...clientList];
+     const nextOrders = [newOrder, ...orders];
+     const state: SharedWaterState = { orders: nextOrders, clients: nextClients, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, activeDate, dayResetAt };
+     void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) }).catch(() => undefined);
+     if (!clientList.some((item) => item.phone === client.phone)) setClientList(nextClients);
+     setOrders(nextOrders);
     setNote(""); setQuantity(1); setCartItems([]); setClientSearch(""); setSelectedClient(null); setAddress(""); setComuna(""); setPhone("");
   }
    function addProductToCart(itemToAdd: ProductOption = currentProduct, amount = quantity) { const inventoryItem = inventory.find((item) => item.name === itemToAdd.name); const existingQuantity = cartItems.find((item) => item.product === itemToAdd.name)?.quantity ?? 0; if (inventoryItem && !isUnlimitedProduct(inventoryItem.name) && existingQuantity + amount > inventoryItem.stock) return; setCartItems((items) => { const existing = items.find((item) => item.product === itemToAdd.name); return existing ? items.map((item) => item.product === itemToAdd.name ? { ...item, quantity: item.quantity + amount } : item) : [...items, { product: itemToAdd.name, quantity: amount, unitPrice: itemToAdd.price }]; }); setQuantity(1); }
