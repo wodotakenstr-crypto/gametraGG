@@ -1406,8 +1406,12 @@ app.put("/api/water/state", (request, response) => {
   }
   const store = readStore();
   const previousState = store.waterDelivery;
-  if (previousState?.dayResetAt && !state.dayResetAt && previousState.activeDate === state.activeDate && state.orders.length > 0) {
-    return response.json({ ok: true, ignored: true });
+  if (previousState?.activeDate === state.activeDate) {
+    const incomingOrderIds = new Set(state.orders.map(order => order.id));
+    state.orders = [
+      ...previousState.orders.filter(order => !incomingOrderIds.has(order.id)),
+      ...state.orders
+    ];
   }
   store.waterDelivery = state;
   writeStore(store);
