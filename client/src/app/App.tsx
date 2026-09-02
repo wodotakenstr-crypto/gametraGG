@@ -440,9 +440,13 @@ export function App() {
    function closeDailyPeriod() {
      if (!orders.length && !expenses.length) return;
      const now = new Date();
-     const date = now.toISOString().slice(0, 10);
-     if (!window.confirm(`¿Guardar y limpiar el reporte del ${date}?`)) return;
-     setDailyArchives((archives) => [...archives, { id: `${date}-${Date.now()}`, date, archivedAt: now.toISOString(), orders, expenses }]);
+      const date = now.toISOString().slice(0, 10);
+      if (!window.confirm(`¿Guardar y limpiar el reporte del ${date}?`)) return;
+      const archive = { id: `${date}-${Date.now()}`, date, archivedAt: now.toISOString(), orders, expenses };
+      const nextArchives = [...dailyArchives, archive];
+      const clearedState: SharedWaterState = { orders: [], clients: clientList, inventory, expenses: [], driverLocation: null, monthlyClosures, dailyArchives: nextArchives, activeDate: date };
+      void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clearedState) }).catch(() => undefined);
+      setDailyArchives(nextArchives);
       ignoreRemoteDayDataUntil.current = Date.now() + 5000; setOrders([]); setExpenses([]); setDriverLocation(null); setActiveDate(date);
     }
     function updateDailyArchive(archive: DailyArchive) { setDailyArchives((items) => items.map((item) => item.id === archive.id ? archive : item)); }
