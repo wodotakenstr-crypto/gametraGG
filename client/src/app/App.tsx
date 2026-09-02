@@ -323,13 +323,15 @@ export function App() {
   useEffect(() => { if (dayResetAt) localStorage.setItem("agua-clara-day-reset-at", dayResetAt); }, [dayResetAt]);
   useEffect(() => { const onPopState = () => setActiveSection(pageForPath(window.location.pathname)); window.addEventListener("popstate", onPopState); return () => window.removeEventListener("popstate", onPopState); }, []);
   useEffect(() => {
-     const applyState = (state: SharedWaterState | null) => {
-       if (!state) return;
-         setOrders((current) => { if (Date.now() < ignoreRemoteDayDataUntil.current || closedDayRef.current === state.activeDate) return current; const serverIds = new Set(state.orders.map((order) => order.id)); const localOnly = current.filter((order) => !serverIds.has(order.id)); const next = [...state.orders, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
+      const applyState = (state: SharedWaterState | null) => {
+        if (!state) return;
+        const remoteResetDetected = Boolean(state.dayResetAt && closedDayRef.current !== state.activeDate);
+        if (remoteResetDetected) { closedDayRef.current = state.activeDate ?? null; localStorage.setItem("agua-clara-closed-day", state.activeDate ?? ""); }
+         setOrders((current) => { if (remoteResetDetected) return []; if (Date.now() < ignoreRemoteDayDataUntil.current || closedDayRef.current === state.activeDate) return current; const serverIds = new Set(state.orders.map((order) => order.id)); const localOnly = current.filter((order) => !serverIds.has(order.id)); const next = [...state.orders, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        setClientList((current) => { const serverPhones = new Set(state.clients.map((client) => client.phone)); const localOnly = current.filter((client) => !serverPhones.has(client.phone)); const next = [...state.clients, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        const cleanedInventory = ensureInventoryOnlyProducts(removeDiscontinuedProducts(state.inventory));
        setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
-       setExpenses((current) => Date.now() < ignoreRemoteDayDataUntil.current || closedDayRef.current === state.activeDate ? current : JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
+       setExpenses((current) => remoteResetDetected ? [] : Date.now() < ignoreRemoteDayDataUntil.current || closedDayRef.current === state.activeDate ? current : JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
        const safeLocation = isChileLocation(state.driverLocation) ? state.driverLocation : null;
        setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(safeLocation) ? current : safeLocation);
        setMonthlyClosures((current) => JSON.stringify(current) === JSON.stringify(state.monthlyClosures ?? []) ? current : state.monthlyClosures ?? []);
