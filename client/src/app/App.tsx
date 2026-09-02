@@ -276,6 +276,7 @@ function ClientActions({ clients, onEdit, onDelete }: { clients: Client[]; onEdi
 }
 
 export function App() {
+  const locallyClosedDay = loadSaved<string | null>("agua-clara-closed-day", null);
   const [orders, setOrders] = useState(() => loadSaved<Order[]>("agua-clara-orders", initialOrders));
   const [clientList, setClientList] = useState(() => loadSaved<Client[]>("agua-clara-clients", clients));
   const [activeSection, setActiveSection] = useState(() => pageForPath(window.location.pathname));
@@ -297,6 +298,7 @@ export function App() {
   const previousOrders = useRef<Order[] | null>(null);
   const locationWatch = useRef<number | null>(null);
   const ignoreRemoteDayDataUntil = useRef(0);
+  const closedDayRef = useRef(locallyClosedDay);
   const [product, setProduct] = useState(products[0]?.name ?? "");
   const [quantity, setQuantity] = useState(1);
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
@@ -321,11 +323,11 @@ export function App() {
   useEffect(() => {
      const applyState = (state: SharedWaterState | null) => {
        if (!state) return;
-         setOrders((current) => { if (Date.now() < ignoreRemoteDayDataUntil.current) return current; const serverIds = new Set(state.orders.map((order) => order.id)); const localOnly = current.filter((order) => !serverIds.has(order.id)); const next = [...state.orders, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
+         setOrders((current) => { if (Date.now() < ignoreRemoteDayDataUntil.current || closedDayRef.current === state.activeDate) return current; const serverIds = new Set(state.orders.map((order) => order.id)); const localOnly = current.filter((order) => !serverIds.has(order.id)); const next = [...state.orders, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        setClientList((current) => { const serverPhones = new Set(state.clients.map((client) => client.phone)); const localOnly = current.filter((client) => !serverPhones.has(client.phone)); const next = [...state.clients, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        const cleanedInventory = ensureInventoryOnlyProducts(removeDiscontinuedProducts(state.inventory));
        setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
-       setExpenses((current) => Date.now() < ignoreRemoteDayDataUntil.current ? current : JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
+       setExpenses((current) => Date.now() < ignoreRemoteDayDataUntil.current || closedDayRef.current === state.activeDate ? current : JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
        const safeLocation = isChileLocation(state.driverLocation) ? state.driverLocation : null;
        setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(safeLocation) ? current : safeLocation);
        setMonthlyClosures((current) => JSON.stringify(current) === JSON.stringify(state.monthlyClosures ?? []) ? current : state.monthlyClosures ?? []);
@@ -446,6 +448,7 @@ export function App() {
       const nextArchives = [...dailyArchives, archive];
       const clearedState: SharedWaterState = { orders: [], clients: clientList, inventory, expenses: [], driverLocation: null, monthlyClosures, dailyArchives: nextArchives, activeDate: date };
       void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clearedState) }).catch(() => undefined);
+      localStorage.setItem("agua-clara-closed-day", date); closedDayRef.current = date;
       setDailyArchives(nextArchives);
       ignoreRemoteDayDataUntil.current = Date.now() + 5000; setOrders([]); setExpenses([]); setDriverLocation(null); setActiveDate(date);
     }
