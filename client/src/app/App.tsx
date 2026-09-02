@@ -297,8 +297,9 @@ export function App() {
   const [sharedLoaded, setSharedLoaded] = useState(false);
   const [deliveryAlerts, setDeliveryAlerts] = useState<DeliveryAlert[]>([]);
   const [showAlerts, setShowAlerts] = useState(false);
-  const previousOrders = useRef<Order[] | null>(null);
-  const locationWatch = useRef<number | null>(null);
+   const previousOrders = useRef<Order[] | null>(null);
+   const locationWatch = useRef<number | null>(null);
+   const lastRemoteResetAt = useRef(locallyClosedAt);
   const ignoreRemoteDayDataUntil = useRef(0);
   const closedDayRef = useRef(locallyClosedDay);
   const [product, setProduct] = useState(products[0]?.name ?? "");
@@ -327,8 +328,9 @@ export function App() {
   useEffect(() => {
       const applyState = (state: SharedWaterState | null) => {
         if (!state) return;
-        const remoteResetDetected = Boolean(state.dayResetAt && closedDayRef.current !== state.activeDate);
-        if (remoteResetDetected) { closedDayRef.current = state.activeDate ?? null; localStorage.setItem("agua-clara-closed-day", state.activeDate ?? ""); }
+         const remoteResetDetected = Boolean(state.dayResetAt && lastRemoteResetAt.current && state.dayResetAt !== lastRemoteResetAt.current);
+         if (state.dayResetAt && !lastRemoteResetAt.current) lastRemoteResetAt.current = state.dayResetAt;
+         if (remoteResetDetected) { lastRemoteResetAt.current = state.dayResetAt; closedDayRef.current = state.activeDate ?? null; localStorage.setItem("agua-clara-closed-day", state.activeDate ?? ""); }
          setOrders((current) => { if (remoteResetDetected) return []; if (Date.now() < ignoreRemoteDayDataUntil.current || closedDayRef.current === state.activeDate) return current; const serverIds = new Set(state.orders.map((order) => order.id)); const localOnly = current.filter((order) => !serverIds.has(order.id)); const next = [...state.orders, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        setClientList((current) => { const serverPhones = new Set(state.clients.map((client) => client.phone)); const localOnly = current.filter((client) => !serverPhones.has(client.phone)); const next = [...state.clients, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        const cleanedInventory = ensureInventoryOnlyProducts(removeDiscontinuedProducts(state.inventory));
