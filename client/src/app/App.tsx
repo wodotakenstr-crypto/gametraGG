@@ -296,6 +296,7 @@ export function App() {
   const [showAlerts, setShowAlerts] = useState(false);
   const previousOrders = useRef<Order[] | null>(null);
   const locationWatch = useRef<number | null>(null);
+  const ignoreRemoteDayDataUntil = useRef(0);
   const [product, setProduct] = useState(products[0]?.name ?? "");
   const [quantity, setQuantity] = useState(1);
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
@@ -320,11 +321,11 @@ export function App() {
   useEffect(() => {
      const applyState = (state: SharedWaterState | null) => {
        if (!state) return;
-         setOrders((current) => { const serverIds = new Set(state.orders.map((order) => order.id)); const localOnly = current.filter((order) => !serverIds.has(order.id)); const next = [...state.orders, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
+         setOrders((current) => { if (Date.now() < ignoreRemoteDayDataUntil.current) return current; const serverIds = new Set(state.orders.map((order) => order.id)); const localOnly = current.filter((order) => !serverIds.has(order.id)); const next = [...state.orders, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        setClientList((current) => { const serverPhones = new Set(state.clients.map((client) => client.phone)); const localOnly = current.filter((client) => !serverPhones.has(client.phone)); const next = [...state.clients, ...localOnly]; return JSON.stringify(current) === JSON.stringify(next) ? current : next; });
        const cleanedInventory = ensureInventoryOnlyProducts(removeDiscontinuedProducts(state.inventory));
        setInventory((current) => JSON.stringify(current) === JSON.stringify(cleanedInventory) ? current : cleanedInventory);
-      setExpenses((current) => JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
+       setExpenses((current) => Date.now() < ignoreRemoteDayDataUntil.current ? current : JSON.stringify(current) === JSON.stringify(state.expenses) ? current : state.expenses);
        const safeLocation = isChileLocation(state.driverLocation) ? state.driverLocation : null;
        setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(safeLocation) ? current : safeLocation);
        setMonthlyClosures((current) => JSON.stringify(current) === JSON.stringify(state.monthlyClosures ?? []) ? current : state.monthlyClosures ?? []);
@@ -433,7 +434,7 @@ export function App() {
      if (monthlyClosures.some((closure) => closure.period === period)) return;
      if (!window.confirm(`¿Cerrar definitivamente ${period}? Se archivarán sus pedidos y gastos.`)) return;
      setMonthlyClosures((closures) => [...closures, { id: `${period}-${Date.now()}`, period, closedAt: now.toISOString(), orders, expenses }]);
-     setOrders([]); setExpenses([]); setDriverLocation(null);
+      ignoreRemoteDayDataUntil.current = Date.now() + 5000; setOrders([]); setExpenses([]); setDriverLocation(null);
    }
    function closeDailyPeriod() {
      if (!orders.length && !expenses.length) return;
@@ -441,7 +442,7 @@ export function App() {
      const date = now.toISOString().slice(0, 10);
      if (!window.confirm(`¿Guardar y limpiar el reporte del ${date}?`)) return;
      setDailyArchives((archives) => [...archives, { id: `${date}-${Date.now()}`, date, archivedAt: now.toISOString(), orders, expenses }]);
-      setOrders([]); setExpenses([]); setDriverLocation(null); setActiveDate(date);
+      ignoreRemoteDayDataUntil.current = Date.now() + 5000; setOrders([]); setExpenses([]); setDriverLocation(null); setActiveDate(date);
     }
     function updateDailyArchive(archive: DailyArchive) { setDailyArchives((items) => items.map((item) => item.id === archive.id ? archive : item)); }
    function addClient(event: FormEvent) {
