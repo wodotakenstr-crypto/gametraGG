@@ -1393,6 +1393,27 @@ app.post("/api/orders/:orderId/dispute", (request, response) => {
   response.json(orderWithProduct(participant.store, participant.order));
 });
 
+// Shared operational state for the De la Roca delivery console.
+app.get("/api/water/state", (request, response) => {
+  const store = readStore();
+  response.json(store.waterDelivery || null);
+});
+
+app.put("/api/water/state", (request, response) => {
+  const state = request.body;
+  if (!state || typeof state !== "object" || !Array.isArray(state.orders) || !Array.isArray(state.clients) || !Array.isArray(state.inventory) || !Array.isArray(state.expenses)) {
+    return response.status(400).json({ error: "Estado operativo inválido." });
+  }
+  const store = readStore();
+  const previousState = store.waterDelivery;
+  if (previousState?.dayResetAt && !state.dayResetAt && previousState.activeDate === state.activeDate && state.orders.length > 0) {
+    return response.json({ ok: true, ignored: true });
+  }
+  store.waterDelivery = state;
+  writeStore(store);
+  response.json({ ok: true });
+});
+
 // React Router owns every public route.
 app.get("/{*splat}", (request, response, next) => {
   if (request.path.startsWith("/api")) return next();
