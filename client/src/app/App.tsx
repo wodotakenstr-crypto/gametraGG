@@ -117,7 +117,6 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
 }
 
 const comunaCoordinates: Record<string, [number, number]> = { "La Florida": [-33.533, -70.597], Macul: [-33.49, -70.6], "Ñuñoa": [-33.456, -70.598] };
-const routeDistance = (order: Order) => { const [latitude, longitude] = comunaCoordinates[order.comuna] ?? [-33.456, -70.598]; return Math.hypot(latitude - depot.latitude, longitude - depot.longitude); };
 const mapIcon = (className: string, path: string) => divIcon({ className: "", html: `<span class="live-map-pin ${className}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}" /></svg></span>`, iconSize: [42, 42], iconAnchor: [21, 42] });
 const depotIcon = mapIcon("depot", "m3 10 9-7 9 7v10h-6v-6H9v6H3z");
 const sisterHomeIcon = mapIcon("sister-home", "m3 10 9-7 9 7v10h-6v-6H9v6H3z");
@@ -400,14 +399,8 @@ export function App() {
   const salesTotal = delivered.reduce((sum, order) => sum + order.total, 0);
   const expensesTotal = expenses.reduce((sum, item) => sum + item.value, 0);
   useEffect(() => { if (activeSection !== "Reportes") return; const card = document.querySelector<HTMLElement>(".total-card"); if (!card) return; const label = card.querySelector("small"); const value = card.querySelector("strong"); const detail = card.querySelector("p"); if (label) label.textContent = "TOTAL NETO"; if (value) value.textContent = money(salesTotal - expensesTotal); if (detail) detail.textContent = "Ventas menos gastos"; }, [activeSection, salesTotal, expensesTotal]);
-  const routeOrders = orders.filter((order) => order.status !== "Entregado").sort((a, b) => routeDistance(a) - routeDistance(b));
+  const routeOrders = orders.filter((order) => order.status !== "Entregado");
   const nextStop = routeOrders[0];
-  useEffect(() => {
-    if (activeSection !== "Repartidor") return;
-    const currentOrderIds = orders.filter((order) => order.status !== "Entregado").map((order) => order.id);
-    const containers = [document.querySelector<HTMLElement>(".rider-orders"), document.querySelector<HTMLElement>(".route-list")];
-    containers.forEach((container) => { if (!container) return; const cards = Array.from(container.children); routeOrders.forEach((order) => { const index = currentOrderIds.indexOf(order.id); if (index >= 0 && cards[index]) container.append(cards[index]); }); });
-  }, [activeSection, orders, routeOrders]);
 
   function selectClient(client: Client) { setSelectedClient(client); setClientSearch(client.name); setAddress(client.address); setComuna(client.comuna); setPhone(client.phone); }
   function addOrder(event: FormEvent) {
