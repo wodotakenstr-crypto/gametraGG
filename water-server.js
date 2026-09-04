@@ -42,7 +42,28 @@ app.get("/api/water/state", async (request, response, next) => {
 
 app.put("/api/water/state", async (request, response, next) => {
   if (!validState(request.body)) return response.status(400).json({ error: "Estado operativo inválido." });
-  try { await writeState(request.body); response.json({ ok: true }); } catch (error) { next(error); }
+  try {
+    const incoming = request.body;
+    const current = await readState();
+    const incomingReset = Date.parse(incoming.dayResetAt || "");
+    const currentReset = Date.parse(current?.dayResetAt || "");
+
+    // A newer reset is the manual close. Older browser tabs cannot undo it.
+    if (validState(current) && Number.isFinite(currentReset) && (!Number.isFinite(incomingReset) || incomingReset < currentReset)) {
+      return response.json({ ok: true, ignored: true });
+    }
+
+    if (validState(current) && incoming.dayResetAt === current.dayResetAt) {
+      const incomingOrderIds = new Set(incoming.orders.map((order) => order.id));
+      incoming.orders = [
+        ...current.orders.filter((order) => !incomingOrderIds.has(order.id)),
+        ...incoming.orders
+      ];
+    }
+
+    await writeState(incoming);
+    response.json({ ok: true });
+  } catch (error) { next(error); }
 });
 
 app.patch("/api/water/location", async (request, response, next) => {
