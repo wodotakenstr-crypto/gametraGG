@@ -54,6 +54,9 @@ app.put("/api/water/state", async (request, response, next) => {
     }
 
     if (validState(current) && incoming.dayResetAt === current.dayResetAt) {
+      const deletedOrderIds = new Set((current.deletedOrderIds || []).map(String));
+      incoming.orders = incoming.orders.filter((order) => !deletedOrderIds.has(String(order.id)));
+      incoming.deletedOrderIds = [...deletedOrderIds];
       const incomingOrderIds = new Set(incoming.orders.map((order) => order.id));
       incoming.orders = [
         ...current.orders.filter((order) => !incomingOrderIds.has(order.id)),
@@ -62,6 +65,18 @@ app.put("/api/water/state", async (request, response, next) => {
     }
 
     await writeState(incoming);
+    response.json({ ok: true });
+  } catch (error) { next(error); }
+});
+
+app.delete("/api/water/orders/:orderId", async (request, response, next) => {
+  try {
+    const state = await readState();
+    if (!validState(state)) return response.status(404).json({ error: "Estado operativo no inicializado." });
+    const orderId = String(request.params.orderId);
+    state.orders = state.orders.filter((order) => String(order.id) !== orderId);
+    state.deletedOrderIds = [...new Set([...(state.deletedOrderIds || []).map(String), orderId])];
+    await writeState(state);
     response.json({ ok: true });
   } catch (error) { next(error); }
 });
