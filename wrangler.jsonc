@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "delaroca-pedidos",
+  "compatibility_date": "2026-09-25",
+  "pages_build_output_dir": "./client/dist",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "delaroca-pedidos",
+      "database_id": "08f15591-fee6-4426-acb1-0370d29a2283"
+    }
+  ]
+}
