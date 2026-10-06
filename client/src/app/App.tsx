@@ -85,6 +85,8 @@ const isChileLocation = (location: DriverLocation) => !location || (location.lat
 const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
 const archiveTotals = (archive: DailyArchive) => { const sales = archive.orders.reduce((sum, order) => sum + order.total, 0); const expenses = archive.expenses.reduce((sum, item) => sum + item.value, 0); return { sales, expenses, net: sales - expenses }; };
 const downloadArchive = (archive: DailyArchive) => { const blob = new Blob([JSON.stringify(archive, null, 2)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `reporte-${archive.date}.json`; link.click(); URL.revokeObjectURL(link.href); };
+const closureTotals = (closure: MonthlyClosure) => { const sales = closure.orders.reduce((sum, order) => sum + order.total, 0); const expenses = closure.expenses.reduce((sum, item) => sum + item.value, 0); return { sales, expenses, net: sales - expenses }; };
+const downloadMonthlyClosure = (closure: MonthlyClosure) => { const blob = new Blob([JSON.stringify(closure, null, 2)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `cierre-mensual-${closure.period.replace(/\s+/g, "-")}.json`; link.click(); URL.revokeObjectURL(link.href); };
 const currentDateLong = () => new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "numeric", month: "long" }).format(new Date()).toUpperCase();
 const currentDateShort = () => new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", year: "numeric" }).format(new Date()).replace(".", "");
 const loadSaved = <T,>(key: string, fallback: T): T => { try { const saved = localStorage.getItem(key); return saved ? JSON.parse(saved) as T : fallback; } catch { return fallback; } };
@@ -222,6 +224,13 @@ function ArchivedReportEditor({ archives, onUpdate }: { archives: DailyArchive[]
   function updateDate(value: string) { setDraft((current) => current ? { ...current, date: value } : current); }
   if (!container) return null;
   return createPortal(<section className="archived-report-editor"><div className="archived-report-heading"><div><p className="section-kicker">CIERRES MANUALES</p><h3>Reportes guardados</h3></div><span>Aquí aparecen los cierres para editar y descargar</span></div><div className="archived-report-list">{archives.slice().reverse().map((archive) => { const totals = archiveTotals(archive); return <div key={archive.id}><b>{archive.date}</b><span>{archive.orders.length} pedidos · Ventas {money(totals.sales)} · Gastos {money(totals.expenses)} · Total {money(totals.net)}</span><button type="button" onClick={() => setDraft(JSON.parse(JSON.stringify(archive)) as DailyArchive)}>Ver / Editar</button><button type="button" onClick={() => downloadArchive(archive)}>Descargar</button></div>; })}</div>{draft && <div className="archive-edit-modal"><div className="archive-edit-card"><button type="button" className="daily-report-close" onClick={() => setDraft(null)}>×</button><p className="section-kicker">REPORTE {draft.date}</p><h3>Editar reporte guardado</h3><label className="archive-edit-date">Fecha del reporte<input type="date" value={draft.date} onChange={(event) => updateDate(event.target.value)} /></label><div className="archive-edit-orders">{draft.orders.map((order) => { const item = getOrderItems(order)[0]; return <div className="archive-edit-row" key={order.id}><label>Cliente<input value={order.client} onChange={(event) => updateOrder(order.id, "client", event.target.value)} /></label><label>Cantidad<input type="number" min="1" value={item.quantity} onChange={(event) => updateOrder(order.id, "quantity", event.target.value)} /></label><label>Precio<input type="number" min="0" value={item.unitPrice} onChange={(event) => updateOrder(order.id, "unitPrice", event.target.value)} /></label></div>; })}</div><h4>Gastos</h4>{draft.expenses.map((item, index) => <div className="archive-edit-expense" key={index}><input placeholder="Nombre del gasto" value={item.name} onChange={(event) => updateExpense(index, "name", event.target.value)} /><input aria-label="Monto del gasto" type="number" min="0" value={item.value} onChange={(event) => updateExpense(index, "value", event.target.value)} /></div>)}<button className="archive-add-expense" type="button" onClick={addExpense}>+ Agregar gasto</button><button className="submit-order" type="button" onClick={() => { onUpdate(draft); setDraft(null); }}>Guardar cambios</button></div></div>}</section>, container);
+}
+
+function MonthlyClosureHistory({ closures }: { closures: MonthlyClosure[] }) {
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  useEffect(() => { const frame = requestAnimationFrame(() => setContainer(document.querySelector<HTMLElement>(".reports-section"))); return () => cancelAnimationFrame(frame); }, []);
+  if (!container) return null;
+  return createPortal(<section className="archived-report-editor monthly-closure-history"><div className="archived-report-heading"><div><p className="section-kicker">CIERRE DE MES</p><h3>Cierres mensuales guardados</h3></div><span>Resumen consolidado de todos los cierres diarios</span></div>{closures.length ? <div className="archived-report-list">{closures.slice().reverse().map((closure) => { const totals = closureTotals(closure); return <div key={closure.id}><b>{closure.period}</b><span>{closure.orders.length} pedidos · Ventas {money(totals.sales)} · Gastos {money(totals.expenses)} · Total {money(totals.net)}</span><button type="button" onClick={() => downloadMonthlyClosure(closure)}>Descargar cierre</button></div>; })}</div> : <p className="monthly-closure-empty">Aún no has realizado un cierre mensual.</p>}</section>, container);
 }
 
 function AddArchivedOrder({ archives, clients, inventory, onUpdate }: { archives: DailyArchive[]; clients: Client[]; inventory: InventoryItem[]; onUpdate: (archive: DailyArchive) => void }) {
@@ -440,14 +449,18 @@ export function App() {
     if (!expenseName || expense <= 0) return;
     setExpenses((items) => [...items, { name: expenseName, value: expense }]); setExpenseName(""); setExpense(0);
    }
-   function closeMonthlyPeriod() {
-     const now = new Date();
-     const periodDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-     const period = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric" }).format(periodDate);
-     if (monthlyClosures.some((closure) => closure.period === period)) return;
-     if (!window.confirm(`¿Cerrar definitivamente ${period}? Se archivarán sus pedidos y gastos.`)) return;
-     setMonthlyClosures((closures) => [...closures, { id: `${period}-${Date.now()}`, period, closedAt: now.toISOString(), orders, expenses }]);
-      ignoreRemoteDayDataUntil.current = Date.now() + 5000; setOrders([]); setExpenses([]); setDriverLocation(null);
+    function closeMonthlyPeriod() {
+      const now = new Date();
+      const periodDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const period = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric" }).format(periodDate);
+      const periodPrefix = `${periodDate.getFullYear()}-${String(periodDate.getMonth() + 1).padStart(2, "0")}`;
+      const periodArchives = dailyArchives.filter((archive) => archive.date.startsWith(periodPrefix));
+      if (monthlyClosures.some((closure) => closure.period === period)) return;
+      if (!periodArchives.length) { window.alert(`No hay reportes diarios guardados para ${period}.`); return; }
+      if (!window.confirm(`¿Crear el cierre mensual de ${period} con ${periodArchives.length} reportes diarios?`)) return;
+      const monthlyOrders = periodArchives.flatMap((archive) => archive.orders);
+      const monthlyExpenses = periodArchives.flatMap((archive) => archive.expenses);
+      setMonthlyClosures((closures) => [...closures, { id: `${period}-${Date.now()}`, period, closedAt: now.toISOString(), orders: monthlyOrders, expenses: monthlyExpenses }]);
    }
    function closeDailyPeriod() {
      if (!orders.length && !expenses.length) return;
@@ -556,8 +569,9 @@ export function App() {
      </main>
        {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} onPriceChange={updateProductPrice} onDelete={deleteInventoryItem} onEnableProduct={enableInventoryProduct} onToggleUnlimited={toggleUnlimitedProduct} />}
       {activeSection === "Pedidos" && <OrderProductEditors products={products} cartItems={cartItems} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onRemove={removeProductFromSale} onReorder={reorderProducts} />}
-      {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} dailyArchives={dailyArchives} onClose={closeMonthlyPeriod} onDailyClose={closeDailyPeriod} />}
-      {activeSection === "Reportes" && <ArchivedReportEditor archives={dailyArchives} onUpdate={updateDailyArchive} />}
+       {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} dailyArchives={dailyArchives} onClose={closeMonthlyPeriod} onDailyClose={closeDailyPeriod} />}
+       {activeSection === "Reportes" && <MonthlyClosureHistory closures={monthlyClosures} />}
+       {activeSection === "Reportes" && <ArchivedReportEditor archives={dailyArchives} onUpdate={updateDailyArchive} />}
       {activeSection === "Reportes" && <AddArchivedOrder archives={dailyArchives} clients={clientList} inventory={inventory} onUpdate={updateDailyArchive} />}
      {activeSection === "Clientes" && <ClientActions clients={clientList.filter((client) => `${client.name} ${client.phone} ${client.comuna}`.toLowerCase().includes(clientFilter.toLowerCase()))} onEdit={editClient} onDelete={deleteClient} />}
      {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} stops={routeOrders} /></section>}
