@@ -612,7 +612,6 @@ export function App() {
        {activeSection === "Reportes" && <MonthlyCloseControl closures={monthlyClosures} dailyArchives={dailyArchives} onClose={closeMonthlyPeriod} onDailyClose={closeDailyPeriod} />}
        {activeSection === "Reportes" && <MonthlyClosureHistory closures={monthlyClosures} archives={dailyArchives} />}
        {activeSection === "Reportes" && <ArchivedReportEditor archives={dailyArchives} onUpdate={updateDailyArchive} />}
-      {activeSection === "Reportes" && <AddArchivedOrder archives={dailyArchives} clients={clientList} inventory={inventory} onUpdate={updateDailyArchive} />}
      {activeSection === "Clientes" && <ClientActions clients={clientList.filter((client) => `${client.name} ${client.phone} ${client.comuna}`.toLowerCase().includes(clientFilter.toLowerCase()))} onEdit={editClient} onDelete={deleteClient} />}
      {activeSection === "Repartidor" && <section className="rider-live-map"><LiveRouteMap driverLocation={driverLocation} nextStop={nextStop} stops={routeOrders} /></section>}
       {activeSection === "Repartidor" && <RiderOrderShortcut onOpen={() => goTo("Pedidos")} />}
