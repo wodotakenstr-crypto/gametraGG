@@ -28,7 +28,8 @@ type Order = {
 type Client = { name: string; phone: string; address: string; comuna: string };
 type InventoryItem = { id: string; name: string; category: string; stock: number; unit: string; minimum: number; price?: number; availableForSale?: boolean };
 type DriverLocation = { latitude: number; longitude: number; updatedAt: string } | null;
-type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation; monthlyClosures?: MonthlyClosure[]; dailyArchives?: DailyArchive[]; activeDate?: string; dayResetAt?: string };
+type PendingTransfer = Order & { deliveredAt: string; orderDate: string };
+type SharedWaterState = { orders: Order[]; clients: Client[]; inventory: InventoryItem[]; expenses: { name: string; value: number }[]; driverLocation: DriverLocation; monthlyClosures?: MonthlyClosure[]; dailyArchives?: DailyArchive[]; pendingTransfers?: PendingTransfer[]; activeDate?: string; dayResetAt?: string };
 type DeliveryAlert = { id: number; message: string; createdAt: string };
 type ProductOption = { name: string; price: number; stock: number; unlimited: boolean };
 type MonthlyClosure = { id: string; period: string; closedAt: string; orders: Order[]; expenses: { name: string; value: number }[] };
@@ -115,7 +116,7 @@ const currentDateShort = () => new Intl.DateTimeFormat("es-CL", { day: "numeric"
 const loadSaved = <T,>(key: string, fallback: T): T => { try { const saved = localStorage.getItem(key); return saved ? JSON.parse(saved) as T : fallback; } catch { return fallback; } };
 const getOrderItems = (order: Order): OrderItem[] => order.items?.length ? order.items : [{ product: order.product, quantity: order.quantity, unitPrice: order.total / order.quantity }];
 const usesPackagingSupplies = (name: string) => { const normalized = name.trim().toLocaleLowerCase("es-CL"); return normalized.startsWith("recarga") && (normalized.includes("10 litros") || normalized.includes("20 litros")); };
-const pagePaths: Record<string, string> = { Resumen: "/", Pedidos: "/pedidos", Clientes: "/clientes", Inventario: "/inventario", Reparto: "/reparto", Repartidor: "/repartidor", Reportes: "/reportes" };
+const pagePaths: Record<string, string> = { Resumen: "/", Pedidos: "/pedidos", Clientes: "/clientes", Inventario: "/inventario", Reparto: "/reparto", Deudores: "/deudores", Repartidor: "/repartidor", Reportes: "/reportes" };
 const pageForPath = (path: string) => Object.entries(pagePaths).find(([, value]) => value === path)?.[0] ?? "Resumen";
 
 function Icon({ name, size = 20 }: { name: string; size?: number }) {
@@ -298,7 +299,7 @@ function MobileBackButton({ visible, onBack }: { visible: boolean; onBack: () =>
 function MobileSectionMenu({ activeSection, onNavigate }: { activeSection: string; onNavigate: (section: string) => void }) {
   const [header, setHeader] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
-  const sections = ["Resumen", "Pedidos", "Clientes", "Inventario", "Reparto", "Reportes"];
+  const sections = ["Resumen", "Pedidos", "Clientes", "Inventario", "Reparto", "Deudores", "Reportes"];
   useEffect(() => { const frame = requestAnimationFrame(() => setHeader(document.querySelector<HTMLElement>(".top-header"))); return () => cancelAnimationFrame(frame); }, []);
   return <>{header && createPortal(<button className="mobile-menu-button" type="button" aria-label="Abrir menú de secciones" onClick={() => setOpen((visible) => !visible)}>☰</button>, header)}{open && createPortal(<div className="mobile-section-menu">{sections.map((section) => <button className={section === activeSection ? "active" : ""} type="button" key={section} onClick={() => { onNavigate(section); setOpen(false); }}>{section}</button>)}</div>, document.body)}</>;
 }
@@ -345,6 +346,7 @@ export function App() {
   const [expenses, setExpenses] = useState(() => loadSaved("agua-clara-expenses", [{ name: "Combustible", value: 18000 }, { name: "Estacionamiento", value: 2500 }]));
   const [monthlyClosures, setMonthlyClosures] = useState<MonthlyClosure[]>(() => loadSaved("agua-clara-monthly-closures", []));
   const [dailyArchives, setDailyArchives] = useState<DailyArchive[]>(() => loadSaved("agua-clara-daily-archives", []));
+  const [pendingTransfers, setPendingTransfers] = useState<PendingTransfer[]>(() => loadSaved("agua-clara-pending-transfers", []));
   const [activeDate, setActiveDate] = useState(() => loadSaved("agua-clara-active-date", new Date().toISOString().slice(0, 10)));
   const [dayResetAt, setDayResetAt] = useState<string | undefined>(() => loadSaved("agua-clara-day-reset-at", undefined));
 
@@ -355,6 +357,7 @@ export function App() {
   useEffect(() => { localStorage.setItem("agua-clara-driver-location", JSON.stringify(driverLocation)); }, [driverLocation]);
   useEffect(() => { localStorage.setItem("agua-clara-monthly-closures", JSON.stringify(monthlyClosures)); }, [monthlyClosures]);
   useEffect(() => { localStorage.setItem("agua-clara-daily-archives", JSON.stringify(dailyArchives)); }, [dailyArchives]);
+  useEffect(() => { localStorage.setItem("agua-clara-pending-transfers", JSON.stringify(pendingTransfers)); }, [pendingTransfers]);
   useEffect(() => { localStorage.setItem("agua-clara-active-date", activeDate); }, [activeDate]);
   useEffect(() => { if (dayResetAt) localStorage.setItem("agua-clara-day-reset-at", dayResetAt); }, [dayResetAt]);
   useEffect(() => { const onPopState = () => setActiveSection(pageForPath(window.location.pathname)); window.addEventListener("popstate", onPopState); return () => window.removeEventListener("popstate", onPopState); }, []);
@@ -372,7 +375,8 @@ export function App() {
        const safeLocation = isChileLocation(state.driverLocation) ? state.driverLocation : null;
        setDriverLocation((current) => JSON.stringify(current) === JSON.stringify(safeLocation) ? current : safeLocation);
        setMonthlyClosures((current) => JSON.stringify(current) === JSON.stringify(state.monthlyClosures ?? []) ? current : state.monthlyClosures ?? []);
-       setDailyArchives((current) => JSON.stringify(current) === JSON.stringify(state.dailyArchives ?? []) ? current : state.dailyArchives ?? []);
+        setDailyArchives((current) => JSON.stringify(current) === JSON.stringify(state.dailyArchives ?? []) ? current : state.dailyArchives ?? []);
+        setPendingTransfers((current) => JSON.stringify(current) === JSON.stringify(state.pendingTransfers ?? []) ? current : state.pendingTransfers ?? []);
         setActiveDate(state.activeDate ?? new Date().toISOString().slice(0, 10));
         setDayResetAt(state.dayResetAt);
     };
@@ -401,10 +405,10 @@ export function App() {
   }, [activeSection]);
   useEffect(() => {
     if (!sharedLoaded) return;
-     const state: SharedWaterState = { orders, clients: clientList, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, activeDate, dayResetAt };
+     const state: SharedWaterState = { orders, clients: clientList, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, pendingTransfers, activeDate, dayResetAt };
     const timeout = window.setTimeout(() => { void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) }).catch(() => undefined); }, 400);
     return () => window.clearTimeout(timeout);
-    }, [orders, clientList, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, activeDate, dayResetAt, sharedLoaded]);
+    }, [orders, clientList, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, pendingTransfers, activeDate, dayResetAt, sharedLoaded]);
   useEffect(() => {
     const previous = previousOrders.current;
     previousOrders.current = orders;
@@ -447,7 +451,7 @@ export function App() {
      const newOrder: Order = { id: Date.now(), client: client.name, phone: client.phone, address: client.address, comuna: client.comuna, product: items[0].product, quantity: items.reduce((sum, item) => sum + item.quantity, 0), total, items, payment, status: "Nuevo", time: "Pendiente", note, createdAt };
      const nextClients = clientList.some((item) => item.phone === client.phone) ? clientList : [client, ...clientList];
      const nextOrders = [newOrder, ...orders];
-     const state: SharedWaterState = { orders: nextOrders, clients: nextClients, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, activeDate, dayResetAt };
+     const state: SharedWaterState = { orders: nextOrders, clients: nextClients, inventory, expenses, driverLocation, monthlyClosures, dailyArchives, pendingTransfers, activeDate, dayResetAt };
      void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) }).catch(() => undefined);
      if (!clientList.some((item) => item.phone === client.phone)) setClientList(nextClients);
      setOrders(nextOrders);
@@ -493,7 +497,7 @@ export function App() {
       const archive = { id: `${date}-${Date.now()}`, date, archivedAt: now.toISOString(), orders, expenses };
       const nextArchives = [...dailyArchives, archive];
       const resetAt = now.toISOString();
-      const clearedState: SharedWaterState = { orders: [], clients: clientList, inventory, expenses: [], driverLocation: null, monthlyClosures, dailyArchives: nextArchives, activeDate: date, dayResetAt: resetAt };
+       const clearedState: SharedWaterState = { orders: [], clients: clientList, inventory, expenses: [], driverLocation: null, monthlyClosures, dailyArchives: nextArchives, pendingTransfers, activeDate: date, dayResetAt: resetAt };
       void fetch("/api/water/state", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clearedState) }).catch(() => undefined);
       localStorage.setItem("agua-clara-closed-day", date); localStorage.setItem("agua-clara-day-reset-at", resetAt); closedDayRef.current = date; setDayResetAt(resetAt);
       setDailyArchives(nextArchives);
@@ -528,23 +532,33 @@ export function App() {
    function updateProductName(name: string, nextName: string) { const trimmedName = nextName.trim(); if (!trimmedName) return; if (isUnlimitedProduct(name)) { unlimitedProducts.delete(name); unlimitedProducts.add(trimmedName); } setInventory((items) => items.map((item) => item.name === name ? { ...item, name: trimmedName } : item)); setProduct((current) => current === name ? trimmedName : current); setCartItems((items) => items.map((item) => item.product === name ? { ...item, product: trimmedName } : item)); }
    function removeProductFromSale(name: string) { if (!window.confirm(`¿Dejar de vender ${name}?`)) return; const nextProduct = products.find((item) => item.name !== name); setInventory((items) => items.map((item) => item.name === name ? { ...item, availableForSale: false } : item)); setCartItems((items) => items.filter((item) => item.product !== name)); setProduct((current) => current === name ? nextProduct?.name ?? "" : current); }
    function reorderProducts(from: string, to: string) { setInventory((items) => { const next = [...items]; const fromIndex = next.findIndex((item) => item.name === from); const toIndex = next.findIndex((item) => item.name === to); if (fromIndex < 0 || toIndex < 0) return items; const [moved] = next.splice(fromIndex, 1); next.splice(toIndex, 0, moved); return next; }); }
-  function advanceOrder(id: number) {
-    const order = orders.find((item) => item.id === id);
-    if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
-     if (order?.status === "En ruta") { const orderItems = getOrderItems(order); const packagingUsage = orderItems.filter((item) => usesPackagingSupplies(item.product)).reduce((total, item) => total + item.quantity, 0); setInventory((stock) => stock.map((item) => { if (item.name === "Sellos de seguridad" || item.name === "Tapas de seguridad") return { ...item, stock: Math.max(0, item.stock - packagingUsage) }; const deliveredItem = orderItems.find((orderItem) => orderItem.product === item.name); return deliveredItem && !isUnlimitedProduct(item.name) ? { ...item, stock: Math.max(0, item.stock - deliveredItem.quantity) } : item; })); }
-    setOrders((items) => items.map((order) => order.id !== id ? order : { ...order, status: order.status === "Nuevo" ? "En ruta" : order.status === "En ruta" ? "Entregado" : "Entregado" }));
-  }
+   async function advanceOrder(id: number) {
+     const order = orders.find((item) => item.id === id);
+     if (!order) return;
+     if (order?.status === "En ruta" && !window.confirm(`Confirmar entrega de ${order.client}?`)) return;
+     if (order.status === "En ruta" && order.payment === "Transferencia") {
+       const response = await fetch("/api/water/transfers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order, orderDate: order.createdAt?.slice(0, 10) ?? activeDate }) }).catch(() => null);
+       if (!response?.ok) { window.alert("No se pudo enviar la transferencia a Deudores."); return; }
+       const { transfer } = await response.json() as { transfer: PendingTransfer };
+       setPendingTransfers((items) => [...items.filter((item) => item.id !== id), transfer]);
+       setOrders((items) => items.filter((item) => item.id !== id));
+     } else {
+       setOrders((items) => items.map((item) => item.id !== id ? item : { ...item, status: item.status === "Nuevo" ? "En ruta" : "Entregado" }));
+     }
+      if (order.status === "En ruta") { const orderItems = getOrderItems(order); const packagingUsage = orderItems.filter((item) => usesPackagingSupplies(item.product)).reduce((total, item) => total + item.quantity, 0); setInventory((stock) => stock.map((item) => { if (item.name === "Sellos de seguridad" || item.name === "Tapas de seguridad") return { ...item, stock: Math.max(0, item.stock - packagingUsage) }; const deliveredItem = orderItems.find((orderItem) => orderItem.product === item.name); return deliveredItem && !isUnlimitedProduct(item.name) ? { ...item, stock: Math.max(0, item.stock - deliveredItem.quantity) } : item; })); }
+   }
+   async function confirmTransferPayment(id: number) { const transfer = pendingTransfers.find((item) => item.id === id); if (!transfer || !window.confirm(`¿Confirmar la transferencia de ${transfer.client} por ${money(transfer.total)}?`)) return; const response = await fetch(`/api/water/transfers/${id}/confirm`, { method: "POST" }).catch(() => null); if (!response?.ok) { window.alert("No se pudo confirmar el pago."); return; } setPendingTransfers((items) => items.filter((item) => item.id !== id)); const state = await fetch("/api/water/state").then((result) => result.json() as Promise<SharedWaterState>); setDailyArchives(state.dailyArchives ?? []); }
   function updateOrderPayment(id: number, payment: PaymentMethod) { setOrders((items) => items.map((order) => order.id === id ? { ...order, payment } : order)); }
   async function cancelOrder(id: number) { const order = orders.find((item) => item.id === id); if (!order || !window.confirm(`¿Cancelar y borrar el pedido de ${order.client}?`)) return; const response = await fetch(`/api/water/orders/${id}`, { method: "DELETE" }).catch(() => null); if (!response?.ok) { window.alert("No se pudo borrar el pedido. Intenta nuevamente."); return; } setOrders((items) => items.filter((item) => item.id !== id)); }
   function goTo(section: string) { const path = pagePaths[section]; if (path && window.location.pathname !== path) window.history.pushState({}, "", path); setActiveSection(section); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
-  const navItems = [["grid", "Resumen"], ["calendar", "Pedidos"], ["users", "Clientes"], ["box", "Inventario"], ["truck", "Reparto"], ["chart", "Reportes"]];
+  const navItems = [["grid", "Resumen"], ["calendar", "Pedidos"], ["users", "Clientes"], ["box", "Inventario"], ["truck", "Reparto"], ["wallet", "Deudores"], ["chart", "Reportes"]];
   const visibleClients = clientSearch ? clientList.filter((client) => `${client.name} ${client.phone}`.toLowerCase().includes(clientSearch.toLowerCase()) && client.name !== selectedClient?.name) : [];
 
   return <div className={`water-app ${activeSection === "Repartidor" ? "rider-mode" : ""}`}>
     <aside className="sidebar">
       <a className="water-brand" href="#top" onClick={() => goTo("Resumen")}><span className="drop-mark">&#9670;</span><span>DE LA<br /><b>ROCA</b></span></a>
-      <nav className="main-menu">{navItems.map(([icon, label]) => <button key={label} className={activeSection === label ? "active" : ""} onClick={() => goTo(label)}><Icon name={icon} /><span>{label}</span>{label === "Pedidos" && <b className="menu-count">{orders.filter((order) => order.status === "Nuevo").length}</b>}</button>)}</nav>
+      <nav className="main-menu">{navItems.map(([icon, label]) => <button key={label} className={activeSection === label ? "active" : ""} onClick={() => goTo(label)}><Icon name={icon} /><span>{label}</span>{label === "Pedidos" && <b className="menu-count">{orders.filter((order) => order.status === "Nuevo").length}</b>}{label === "Deudores" && pendingTransfers.length > 0 && <b className="menu-count">{pendingTransfers.length}</b>}</button>)}</nav>
       <div className="sidebar-bottom"><button><Icon name="settings" /><span>Configuración</span></button><div className="user-card"><div className="avatar">CM</div><div><strong>Carolina Muñoz</strong><small>Administradora</small></div><Icon name="chevron" size={16} /></div></div>
     </aside>
 
@@ -589,6 +603,7 @@ export function App() {
         <div className="expenses-box"><div className="expense-header"><div><h3>Gastos del día</h3><p>Registra los egresos para obtener el cierre real.</p></div><strong>{money(expensesTotal)}</strong></div><div className="expense-items">{expenses.map((item, index) => <div key={`${item.name}-${index}`}><span>{item.name}</span><b>− {money(item.value)}</b><button type="button" aria-label={`Eliminar ${item.name}`} onClick={() => setExpenses((items) => items.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>)}</div><form className="expense-form" onSubmit={addExpense}><input value={expenseName} onChange={(event) => setExpenseName(event.target.value)} placeholder="Ej: Compra de hielo" /><input value={expense || ""} onChange={(event) => setExpense(Number(event.target.value))} type="number" placeholder="Monto" /><button type="submit"><Icon name="plus" size={16} /> Agregar gasto</button></form><div className="net-total"><span>Total después de gastos</span><strong>{money(salesTotal - expensesTotal)}</strong></div></div>
       </section>
       <section className="reports-section"><div><p className="section-kicker">REPORTES</p><h2>Resumen de operación</h2><p>Controla el estado de los pedidos y la forma de pago del día.</p></div><div className="report-grid"><article><small>PEDIDOS NUEVOS</small><strong>{orders.filter((order) => order.status === "Nuevo").length}</strong></article><article><small>EN RUTA</small><strong>{orders.filter((order) => order.status === "En ruta").length}</strong></article><article><small>ENTREGADOS</small><strong>{delivered.length}</strong></article><article><small>TICKET PROMEDIO</small><strong>{money(orders.length ? orders.reduce((total, order) => total + order.total, 0) / orders.length : 0)}</strong></article></div></section></>}
+      {activeSection === "Deudores" && <section className="debtors-page"><div className="clients-intro"><div><p className="section-kicker">TRANSFERENCIAS POR VERIFICAR</p><h2>Deudores</h2><p>Confirma el pago cuando la transferencia aparezca en la cuenta.</p></div><span>{pendingTransfers.length} pendientes</span></div>{pendingTransfers.length ? <div className="debtor-list">{pendingTransfers.slice().sort((a, b) => b.deliveredAt.localeCompare(a.deliveredAt)).map((transfer) => <article className="panel debtor-card" key={transfer.id}><div><small>PEDIDO DEL {transfer.orderDate.split("-").reverse().join("-")}</small><h3>{transfer.client}</h3><p>{transfer.address}, {transfer.comuna}</p><a href={`tel:${transfer.phone.replace(/\s/g, "")}`}>{transfer.phone}</a></div><div className="debtor-products">{getOrderItems(transfer).map((item) => <span key={item.product}>{item.quantity} × {item.product}</span>)}</div><strong>{money(transfer.total)}</strong><button type="button" onClick={() => void confirmTransferPayment(transfer.id)}>Pago confirmado</button></article>)}</div> : <div className="panel debtors-empty"><Icon name="wallet" size={28} /><h3>No hay transferencias pendientes</h3><p>Los pedidos aparecerán aquí cuando el repartidor confirme una entrega pagada por transferencia.</p></div>}</section>}
      </main>
        {activeSection === "Inventario" && <InventoryEditors inventory={inventory} onChange={updateInventoryQuantity} onPriceChange={updateProductPrice} onDelete={deleteInventoryItem} onEnableProduct={enableInventoryProduct} onToggleUnlimited={toggleUnlimitedProduct} />}
       {activeSection === "Pedidos" && <OrderProductEditors products={products} cartItems={cartItems} onAdd={addProductToCart} onPriceChange={updateOrderProductPrice} onNameChange={updateProductName} onRemove={removeProductFromSale} onReorder={reorderProducts} />}

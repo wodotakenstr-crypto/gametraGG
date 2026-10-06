@@ -24,6 +24,14 @@ export async function onRequestPut({ request, env }) {
       ...current.orders.filter((order) => !incomingOrderIds.has(order.id)),
       ...incoming.orders
     ];
+    const confirmedTransferIds = new Set((current.confirmedTransferIds || []).map(String));
+    const incomingTransfers = (incoming.pendingTransfers || []).filter((order) => !confirmedTransferIds.has(String(order.id)));
+    const incomingTransferIds = new Set(incomingTransfers.map((order) => String(order.id)));
+    incoming.pendingTransfers = [
+      ...(current.pendingTransfers || []).filter((order) => !confirmedTransferIds.has(String(order.id)) && !incomingTransferIds.has(String(order.id))),
+      ...incomingTransfers
+    ];
+    incoming.confirmedTransferIds = [...confirmedTransferIds];
   }
 
   await writeState(env.DB, incoming);
