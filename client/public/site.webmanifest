@@ -1,1 +1,20 @@
-{"name":"GameTrade","short_name":"GameTrade","icons":[{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml"}],"theme_color":"#17222e","background_color":"#17222e","display":"standalone"}
+{
+  "name": "De la Roca Repartidor",
+  "short_name": "Repartidor",
+  "description": "Pedidos y ruta de reparto de De la Roca",
+  "id": "/repartidor",
+  "start_url": "/repartidor",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#17222e",
+  "background_color": "#17222e",
+  "display": "standalone",
+  "orientation": "portrait"
+}
