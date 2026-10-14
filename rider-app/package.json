@@ -1,0 +1,16 @@
+{
+  "name": "delaroca-repartidor",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "sync:android": "cap sync android",
+    "build:apk": "cd android && gradlew.bat assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0"
+  }
+}

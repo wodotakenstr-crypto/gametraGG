@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">De la Roca Repartidor</string>
+    <string name="title_activity_main">De la Roca Repartidor</string>
+    <string name="package_name">cl.delaroca.repartidor</string>
+    <string name="custom_url_scheme">cl.delaroca.repartidor</string>
+</resources>
